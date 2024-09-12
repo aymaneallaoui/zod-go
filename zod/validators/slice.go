@@ -32,7 +32,6 @@ func (a *ArraySchema) Required() *ArraySchema {
 	return a
 }
 
-// Validate handles arrays and slices of structs or other types in parallel.
 func (a *ArraySchema) Validate(data interface{}) error {
 	array, ok := data.([]interface{})
 	if !ok {
@@ -69,7 +68,6 @@ func (a *ArraySchema) Validate(data interface{}) error {
 		close(errChan)
 	}()
 
-	// Collect errors
 	for err := range errChan {
 		if err != nil {
 			return err
