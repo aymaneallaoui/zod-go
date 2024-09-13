@@ -54,19 +54,19 @@ func (n *NumberSchema) Validate(data interface{}) error {
 	case float64:
 		num = v
 	default:
-		return zod.NewValidationError("number", data, n.getErrorMessage("type", "invalid type, expected number (int or float64)"))
+		return zod.NewValidationError(fmt.Sprintf("%v", data), data, n.getErrorMessage("type", "invalid type, expected number (int or float64)"))
 	}
 
 	if n.required && num == 0 {
-		return zod.NewValidationError("number", data, n.getErrorMessage("required", "number is required"))
+		return zod.NewValidationError(fmt.Sprintf("%v", data), data, n.getErrorMessage("required", "number is required"))
 	}
 
 	if n.min != nil && num < *n.min {
-		return zod.NewValidationError("number", num, n.getErrorMessage("min", fmt.Sprintf("number is too small, minimum is %f", *n.min)))
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num, n.getErrorMessage("min", fmt.Sprintf("number is too small, minimum is %f", *n.min)))
 	}
 
 	if n.max != nil && num > *n.max {
-		return zod.NewValidationError("number", num, n.getErrorMessage("max", fmt.Sprintf("number is too large, maximum is %f", *n.max)))
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num, n.getErrorMessage("max", fmt.Sprintf("number is too large, maximum is %f", *n.max)))
 	}
 
 	return nil

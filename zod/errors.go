@@ -13,17 +13,15 @@ type ValidationError struct {
 	Details   []ValidationError `json:"details,omitempty"`
 }
 
-// NewValidationError creates a new simple validation error
 func NewValidationError(field string, value interface{}, message string) *ValidationError {
 	return &ValidationError{
 		ErrorType: "Validation Error",
-		Message:   message, // Directly store the relevant message without extra formatting
+		Message:   message,
 		Field:     field,
 		Value:     value,
 	}
 }
 
-// NewNestedValidationError creates a new nested validation error
 func NewNestedValidationError(field string, value interface{}, message string, details []ValidationError) *ValidationError {
 	return &ValidationError{
 		ErrorType: "Nested Validation Error",
@@ -34,7 +32,6 @@ func NewNestedValidationError(field string, value interface{}, message string, d
 	}
 }
 
-// Error returns a human-readable string for the top-level error and its nested details
 func (v *ValidationError) Error() string {
 	if len(v.Details) > 0 {
 		return v.formatNestedError()
@@ -42,7 +39,6 @@ func (v *ValidationError) Error() string {
 	return fmt.Sprintf("Field: %s, Error: %s", v.Field, v.Message)
 }
 
-// formatNestedError recursively formats the nested validation errors
 func (v *ValidationError) formatNestedError() string {
 	var result string
 	for _, detail := range v.Details {
@@ -51,43 +47,37 @@ func (v *ValidationError) formatNestedError() string {
 	return result
 }
 
-// ErrorJSON returns the JSON representation of the error with only the message
 func (v *ValidationError) ErrorJSON() string {
-	// If there are nested details, we need to flatten them
+
 	if len(v.Details) > 0 {
 		return v.flattenNestedErrors()
 	}
 
-	// Return simple error if there are no nested details
 	errJSON, _ := json.Marshal(map[string]string{
 		"field":   v.Field,
-		"message": v.Message, // Use only the message itself, no "Field: string, Error: ..." formatting
+		"message": v.Message,
 	})
 	return string(errJSON)
 }
 
-// flattenNestedErrors returns a simplified JSON with just the most relevant error messages
 func (v *ValidationError) flattenNestedErrors() string {
 	var flatErrors []map[string]string
 
-	// Collect errors from both top-level and nested errors
 	v.collectErrors(&flatErrors)
 
 	flatErrorJSON, _ := json.Marshal(flatErrors)
 	return string(flatErrorJSON)
 }
 
-// collectErrors recursively collects both top-level and nested validation errors
 func (v *ValidationError) collectErrors(flatErrors *[]map[string]string) {
-	// Add the current error to the list
+
 	if v.Field != "" && v.Message != "" {
 		*flatErrors = append(*flatErrors, map[string]string{
 			"field":   v.Field,
-			"message": v.Message, // Only use the clean message without extra formatting
+			"message": v.Message,
 		})
 	}
 
-	// Recursively collect any nested errors
 	for _, detail := range v.Details {
 		detail.collectErrors(flatErrors)
 	}
