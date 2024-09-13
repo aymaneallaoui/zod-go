@@ -7,9 +7,10 @@ import (
 
 // ValidationError holds detailed information about validation errors
 type ValidationError struct {
-	Field   string      `json:"field"`
-	Value   interface{} `json:"value"`
-	Message string      `json:"message"`
+	Field   string            `json:"field"`
+	Value   interface{}       `json:"value"`
+	Message string            `json:"message"`
+	Details []ValidationError `json:"details,omitempty"` // Nested errors go here
 }
 
 // Error formats the error as a human-readable message
@@ -19,7 +20,7 @@ func (e *ValidationError) Error() string {
 
 // ErrorJSON formats the error as a JSON string
 func (e *ValidationError) ErrorJSON() string {
-	jsonData, _ := json.Marshal(e)
+	jsonData, _ := json.MarshalIndent(e, "", "  ") // Pretty print JSON for readability
 	return string(jsonData)
 }
 
@@ -29,5 +30,15 @@ func NewValidationError(field string, value interface{}, message string) *Valida
 		Field:   field,
 		Value:   value,
 		Message: message,
+	}
+}
+
+// NewNestedValidationError creates a new validation error with nested details
+func NewNestedValidationError(field string, value interface{}, message string, details []ValidationError) *ValidationError {
+	return &ValidationError{
+		Field:   field,
+		Value:   value,
+		Message: message,
+		Details: details, // Add nested errors here
 	}
 }
