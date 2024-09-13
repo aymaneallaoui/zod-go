@@ -20,7 +20,15 @@ func (m *MapSchema) Required() *MapSchema {
 func (m *MapSchema) Validate(data interface{}) error {
 	mapData, ok := data.(map[interface{}]interface{})
 	if !ok {
-		return zod.NewValidationError("map", data, "invalid type, expected map")
+		switch v := data.(type) {
+		case map[string]interface{}:
+			mapData = make(map[interface{}]interface{}, len(v))
+			for k, val := range v {
+				mapData[k] = val
+			}
+		default:
+			return zod.NewValidationError("map", data, "invalid type, expected map")
+		}
 	}
 
 	for key, value := range mapData {

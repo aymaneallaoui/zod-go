@@ -2,58 +2,52 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/aymaneallaoui/zod-Go/zod"
 	"github.com/aymaneallaoui/zod-Go/zod/validators"
 )
 
 func main() {
+	// Example 1: Custom Error Messages for Strings
+	stringSchema := validators.String().Min(3).Max(5).Required().
+		WithMessage("minLength", "This string is too short!").
+		WithMessage("maxLength", "This string is too long!")
 
-	// userSchema := validators.Object(map[string]zod.Schema{
-	// 	"name":     validators.String().Min(3).Max(30).Required(),
-	// 	"age":      validators.Number().Min(18).Max(65),
-	// 	"email":    validators.String().Min(5).Max(50),
-	// 	"isActive": validators.Bool().Required(),
-	// 	"address": validators.Object(map[string]zod.Schema{
-	// 		"street": validators.String().Min(5).Max(50).Required(),
-	// 		"city":   validators.String().Min(3).Max(30).Required(),
-	// 	}).Required(),
-	// 	"preferences": validators.Array(validators.String()).Min(0).Max(5),
-	// }).Default("age", 30)
-
-	// data := map[string]interface{}{
-	// 	"name":     "aymane allaoui",
-	// 	"email":    "aymane@aallaoui.com",
-	// 	"isActive": true,
-	// 	"address": map[string]interface{}{
-	// 		"street": "marjane 2",
-	// 		"city":   "meknes",
-	// 	},
-	// 	"preferences": []interface{}{"emil", "sms"},
-	// }
-
-	// err := userSchema.Validate(data)
-	// if err != nil {
-	// 	fmt.Println("Validation failed:", err.(*zod.ValidationError).ErrorJSON())
-	// } else {
-	// 	fmt.Println("Validation succeeded")
-	// }
-
-	// fmt.Println("Validated data with defaults:", data)
-
-	keySchema := validators.String().Min(1).Max(10)
-	valueSchema := validators.Number().Min(10).Max(100)
-	mapSchema := validators.Map(keySchema, valueSchema)
-
-	zbData := map[interface{}]interface{}{
-		"key1": 50.0,
-		"key2": 70.00,
+	err := stringSchema.Validate("ab")
+	if err != nil {
+		fmt.Println("Validation failed:", err.(*zod.ValidationError).ErrorJSON())
 	}
 
-	err := mapSchema.Validate(zbData)
+	// Example 2: Nested Object Validation with Custom Messages
+	userSchema := validators.Object(map[string]zod.Schema{
+		"name": validators.String().Min(3).Required().
+			WithMessage("required", "Name is a required field!").
+			WithMessage("minLength", "Name must be at least 3 characters."),
+		"age": validators.Number().Min(18).Max(65).
+			WithMessage("min", "Age must be at least 18.").
+			WithMessage("max", "Age must be no more than 65."),
+		"address": validators.Object(map[string]zod.Schema{
+			"street": validators.String().Min(5).Max(50).Required().
+				WithMessage("required", "Street is required.").
+				WithMessage("minLength", "Street must be at least 5 characters."),
+			"city": validators.String().Min(3).Max(30).Required().
+				WithMessage("required", "City is required."),
+		}).Required(),
+	})
+
+	// Invalid user data
+	userData := map[string]interface{}{
+		"name": "Jo",
+		"age":  17,
+		"address": map[string]interface{}{
+			"street": "",
+			"city":   "NY",
+		},
+	}
+
+	err = userSchema.Validate(userData)
 	if err != nil {
-		fmt.Println("Map validation failed:", err.(*zod.ValidationError).ErrorJSON())
+		fmt.Println("User validation failed:", err.(*zod.ValidationError).ErrorJSON())
 	} else {
-		fmt.Println("3tini visa w passport")
+		fmt.Println("User validation succeeded")
 	}
 }

@@ -33,9 +33,24 @@ func (a *ArraySchema) Required() *ArraySchema {
 }
 
 func (a *ArraySchema) Validate(data interface{}) error {
+
 	array, ok := data.([]interface{})
 	if !ok {
-		return zod.NewValidationError("array", data, "invalid type, expected array")
+
+		switch v := data.(type) {
+		case []string:
+			array = make([]interface{}, len(v))
+			for i := range v {
+				array[i] = v[i]
+			}
+		case []int:
+			array = make([]interface{}, len(v))
+			for i := range v {
+				array[i] = v[i]
+			}
+		default:
+			return zod.NewValidationError("array", data, "invalid type, expected array")
+		}
 	}
 
 	if a.required && len(array) == 0 {

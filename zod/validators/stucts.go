@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -8,15 +9,17 @@ import (
 )
 
 type ObjectSchema struct {
-	fields   map[string]zod.Schema
-	required bool
-	defaults map[string]interface{}
+	fields      map[string]zod.Schema
+	required    bool
+	defaults    map[string]interface{}
+	customError map[string]string
 }
 
 func Object(fields map[string]zod.Schema) *ObjectSchema {
 	return &ObjectSchema{
-		fields:   fields,
-		defaults: make(map[string]interface{}),
+		fields:      fields,
+		defaults:    make(map[string]interface{}),
+		customError: make(map[string]string),
 	}
 }
 
@@ -30,10 +33,22 @@ func (o *ObjectSchema) Default(field string, value interface{}) *ObjectSchema {
 	return o
 }
 
+func (o *ObjectSchema) WithMessage(validationType, message string) *ObjectSchema {
+	o.customError[validationType] = message
+	return o
+}
+
+func (o *ObjectSchema) getErrorMessage(validationType, defaultMessage string) string {
+	if msg, exists := o.customError[validationType]; exists {
+		return msg
+	}
+	return defaultMessage
+}
+
 func (o *ObjectSchema) Validate(data interface{}) error {
 	obj, ok := data.(map[string]interface{})
 	if !ok {
-		return zod.NewValidationError("object", data, "invalid type, expected object")
+		return zod.NewValidationError("object", data, o.getErrorMessage("type", "invalid type, expected object"))
 	}
 
 	var wg sync.WaitGroup
@@ -43,15 +58,15 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 		value, exists := obj[key]
 
 		wg.Add(1)
-		go func(k string, v interface{}, s zod.Schema) {
+		go func(k string, v interface{}, s zod.Schema, fieldExists bool) {
 			defer wg.Done()
 
-			if !exists {
+			if !fieldExists {
 				if defaultValue, hasDefault := o.defaults[k]; hasDefault {
 					obj[k] = defaultValue
 					return
 				} else if o.required {
-					errChan <- zod.NewValidationError(k, v, "missing required field")
+					errChan <- zod.NewValidationError(k, v, o.getErrorMessage("required", fmt.Sprintf("missing required field: %s", k)))
 					return
 				}
 			}
@@ -59,7 +74,7 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 			if err := s.Validate(v); err != nil {
 				errChan <- zod.NewValidationError(k, v, err.Error())
 			}
-		}(key, value, schema)
+		}(key, value, schema, exists) // Pass exists to avoid race condition
 	}
 
 	go func() {
@@ -67,16 +82,16 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 		close(errChan)
 	}()
 
-	var combinedErrors []string
+	var combinedErrors []zod.ValidationError
 	for err := range errChan {
-		if err != nil {
-
-			combinedErrors = append(combinedErrors, err.(*zod.ValidationError).ErrorJSON())
+		if validationErr, ok := err.(*zod.ValidationError); ok {
+			combinedErrors = append(combinedErrors, *validationErr)
 		}
 	}
 
 	if len(combinedErrors) > 0 {
-		return zod.NewValidationError("object", data, fmt.Sprintf("Validation failed: %s", combinedErrors))
+		nestedError, _ := json.Marshal(combinedErrors)
+		return zod.NewValidationError("object", data, fmt.Sprintf("Validation failed: %s", string(nestedError)))
 	}
 
 	return nil
