@@ -13,9 +13,11 @@ func main() {
 		WithMessage("minLength", "This string is too short!").
 		WithMessage("maxLength", "This string is too long!")
 
-	err := stringSchema.Validate("ab")
+	err := stringSchema.Validate("arch")
 	if err != nil {
-		fmt.Println("Validation failed:", err.(*zod.ValidationError).ErrorJSON())
+		fmt.Println("Validation failed:", err.(*zod.ValidationError).Error())
+	} else {
+		fmt.Println("Validation succeeded")
 	}
 
 	userSchema := validators.Object(map[string]zod.Schema{
@@ -35,11 +37,11 @@ func main() {
 	})
 
 	userData := map[string]interface{}{
-		"name": "Jo",
-		"age":  17,
+		"name": "aymane",
+		"age":  21,
 		"address": map[string]interface{}{
-			"street": "",
-			"city":   "NY",
+			"street": "lol idk test ",
+			"city":   "",
 		},
 	}
 
