@@ -8,19 +8,19 @@ import (
 )
 
 func BenchmarkStringSchema(b *testing.B) {
-	schema := validators.String().Min(3).Max(30).Required()
+	schema := validators.String().Min(3).Max(5).Required()
 
 	for i := 0; i < b.N; i++ {
-		err := schema.Validate("benchmarktest")
+		err := schema.Validate("test")
 		if err != nil {
-			b.Error("Expected validation to pass")
+			b.Errorf("Expected validation to pass, got error: %v", err)
 		}
 	}
 }
 
 func BenchmarkLargeArrayValidation(b *testing.B) {
 	elementSchema := validators.String().Min(3).Max(10)
-	schema := validators.Array(elementSchema).Min(1000).Max(10000)
+	arraySchema := validators.Array(elementSchema).Min(1000).Max(10000)
 
 	largeArray := make([]interface{}, 10000)
 	for i := 0; i < 10000; i++ {
@@ -28,9 +28,9 @@ func BenchmarkLargeArrayValidation(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		err := schema.Validate(largeArray)
+		err := arraySchema.Validate(largeArray)
 		if err != nil {
-			b.Error("Validation failed unexpectedly")
+			b.Errorf("Validation failed unexpectedly: %v", err)
 		}
 	}
 }
@@ -38,24 +38,26 @@ func BenchmarkLargeArrayValidation(b *testing.B) {
 func BenchmarkNestedObjectValidation(b *testing.B) {
 	schema := validators.Object(map[string]zod.Schema{
 		"name": validators.String().Min(3).Required(),
+		"age":  validators.Number().Min(18).Max(65),
 		"address": validators.Object(map[string]zod.Schema{
-			"street": validators.String().Min(5).Required(),
-			"city":   validators.String().Min(3).Required(),
+			"street": validators.String().Min(5).Max(50).Required(),
+			"city":   validators.String().Min(3).Max(30).Required(),
 		}).Required(),
 	})
 
-	data := map[string]interface{}{
-		"name": "John",
+	userData := map[string]interface{}{
+		"name": "John Doe",
+		"age":  30,
 		"address": map[string]interface{}{
 			"street": "123 Elm St",
-			"city":   "Somewhere",
+			"city":   "New York",
 		},
 	}
 
 	for i := 0; i < b.N; i++ {
-		err := schema.Validate(data)
+		err := schema.Validate(userData)
 		if err != nil {
-			b.Error("Validation failed unexpectedly")
+			b.Errorf("Validation failed unexpectedly: %v", err)
 		}
 	}
 }

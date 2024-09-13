@@ -60,17 +60,22 @@ func TestBoolSchema(t *testing.T) {
 }
 
 func TestArraySchema(t *testing.T) {
-	elementSchema := validators.String().Min(3)
+	elementSchema := validators.String().Min(3).Max(5)
 	schema := validators.Array(elementSchema).Min(1).Max(3)
 
 	err := schema.Validate([]interface{}{"abc", "def"})
 	if err != nil {
-		t.Error("Expected validation to pass")
+		t.Errorf("Expected validation to pass, got error: %v", err)
 	}
 
 	err = schema.Validate([]interface{}{"a"})
 	if err == nil {
 		t.Error("Expected validation error for short string in array")
+	}
+
+	err = schema.Validate([]interface{}{"abc", "def", "ghi", "jkl"})
+	if err == nil {
+		t.Error("Expected validation error for array exceeding max length")
 	}
 }
 
@@ -119,7 +124,6 @@ func TestNestedObjectSchema(t *testing.T) {
 		t.Error("Expected validation to pass")
 	}
 
-	// Invalid nested data
 	data["address"].(map[string]interface{})["street"] = "St"
 	err = schema.Validate(data)
 	if err == nil {
