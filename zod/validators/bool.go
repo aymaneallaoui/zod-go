@@ -1,6 +1,10 @@
 package validators
 
-import "github.com/aymaneallaoui/zod-Go/zod"
+import (
+	"fmt"
+
+	"github.com/aymaneallaoui/zod-Go/zod"
+)
 
 type BoolSchema struct {
 	required    bool
@@ -18,7 +22,6 @@ func (b *BoolSchema) Required() *BoolSchema {
 	return b
 }
 
-// Add WithMessage method for BoolSchema
 func (b *BoolSchema) WithMessage(validationType, message string) *BoolSchema {
 	b.customError[validationType] = message
 	return b
@@ -34,11 +37,11 @@ func (b *BoolSchema) getErrorMessage(validationType, defaultMessage string) stri
 func (b *BoolSchema) Validate(data interface{}) error {
 	val, ok := data.(bool)
 	if !ok {
-		return zod.NewValidationError("bool", data, b.getErrorMessage("type", "invalid type, expected boolean"))
+		return zod.NewValidationError(fmt.Sprintf("%v", data), data, b.getErrorMessage("type", "invalid type, expected boolean"))
 	}
 
 	if b.required && !val {
-		return zod.NewValidationError("bool", data, b.getErrorMessage("required", "boolean is required"))
+		return zod.NewValidationError(fmt.Sprintf("%v", data), data, b.getErrorMessage("required", "boolean is required"))
 	}
 
 	return nil

@@ -113,10 +113,10 @@ func TestNestedObjectSchema(t *testing.T) {
 	})
 
 	data := map[string]interface{}{
-		"name": "John",
+		"name": "John l7way",
 		"address": map[string]interface{}{
 			"street": "123 Elm St",
-			"city":   "Somewhere",
+			"city":   "zbcity",
 		},
 	}
 

@@ -46,11 +46,11 @@ func BenchmarkNestedObjectValidation(b *testing.B) {
 	})
 
 	userData := map[string]interface{}{
-		"name": "John Doe",
+		"name": "testo lol",
 		"age":  30,
 		"address": map[string]interface{}{
-			"street": "123 Elm St",
-			"city":   "New York",
+			"street": "123 salam St",
+			"city":   "New zb",
 		},
 	}
 

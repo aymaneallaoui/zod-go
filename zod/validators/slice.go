@@ -36,7 +36,6 @@ func (a *ArraySchema) Required() *ArraySchema {
 	return a
 }
 
-// Add WithMessage method for ArraySchema
 func (a *ArraySchema) WithMessage(validationType, message string) *ArraySchema {
 	a.customError[validationType] = message
 	return a
