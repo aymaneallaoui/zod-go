@@ -1,6 +1,6 @@
 # Zod-Go: Schema Validation Library for Go
 
-Zod-Go is a Go-based validation library inspired by the popular Zod library in TypeScript(before you say anything yes i'm a TS soy dev, and i don't use go std lib + i only use go cuz it's blue like TS). It allows developers to easily define schemas to validate complex data structures, including strings, numbers, arrays(we know it's sLiCeS), maps, and nested objects.
+Zod-Go is a Go-based validation library inspired by the popular Zod library in TypeScript(before you say anything yes i'm a TS soy dev, and i don't use go std lib cry about it + i only use go cuz it's blue like TS). It allows developers to easily define schemas to validate complex data structures, including strings, numbers, arrays(we know it's sLiCeS), maps, and nested objects.
 
 ## Features
 
