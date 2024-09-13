@@ -71,13 +71,19 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 			}
 
 			if err := s.Validate(v); err != nil {
-				if nestedValidationErr, ok := err.(*zod.ValidationError); ok && len(nestedValidationErr.Details) > 0 {
 
-					errChan <- zod.NewNestedValidationError(k, v, "Validation failed", nestedValidationErr.Details)
+				if nestedValidationErr, ok := err.(*zod.ValidationError); ok && len(nestedValidationErr.Details) > 0 {
+					for _, detail := range nestedValidationErr.Details {
+						errChan <- &detail
+					}
 				} else {
-					errChan <- zod.NewValidationError(k, v, err.Error())
+
+					if validationErr, ok := err.(*zod.ValidationError); ok {
+						errChan <- zod.NewValidationError(k, v, validationErr.Message)
+					} else {
+						errChan <- zod.NewValidationError(k, v, err.Error())
+					}
 				}
-				return
 			}
 		}(key, value, schema, exists)
 	}
@@ -95,7 +101,7 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 	}
 
 	if len(combinedErrors) > 0 {
-		return zod.NewNestedValidationError("object", data, "Validation failed", combinedErrors)
+		return zod.NewNestedValidationError("", data, "", combinedErrors)
 	}
 
 	return nil

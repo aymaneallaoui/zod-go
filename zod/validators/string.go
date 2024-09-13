@@ -49,18 +49,22 @@ func (s *StringSchema) getErrorMessage(validationType, defaultMessage string) st
 func (s *StringSchema) Validate(data interface{}) error {
 	str, ok := data.(string)
 	if !ok {
+		// Pass a clean message
 		return zod.NewValidationError("string", data, s.getErrorMessage("type", "invalid type, expected string"))
 	}
 
 	if s.required && str == "" {
+		// Pass only the clean message
 		return zod.NewValidationError("string", data, s.getErrorMessage("required", "string is required"))
 	}
 
 	if len(str) < s.minLength {
+		// Pass only the clean message
 		return zod.NewValidationError("string", str, s.getErrorMessage("minLength", fmt.Sprintf("string is too short, minimum length is %d", s.minLength)))
 	}
 
 	if s.maxLength > 0 && len(str) > s.maxLength {
+		// Pass only the clean message
 		return zod.NewValidationError("string", str, s.getErrorMessage("maxLength", fmt.Sprintf("string is too long, maximum length is %d", s.maxLength)))
 	}
 

@@ -11,10 +11,14 @@ type ArraySchema struct {
 	minLength     int
 	maxLength     int
 	required      bool
+	customError   map[string]string
 }
 
 func Array(elementSchema zod.Schema) *ArraySchema {
-	return &ArraySchema{elementSchema: elementSchema}
+	return &ArraySchema{
+		elementSchema: elementSchema,
+		customError:   make(map[string]string),
+	}
 }
 
 func (a *ArraySchema) Min(length int) *ArraySchema {
@@ -32,37 +36,35 @@ func (a *ArraySchema) Required() *ArraySchema {
 	return a
 }
 
-func (a *ArraySchema) Validate(data interface{}) error {
+// Add WithMessage method for ArraySchema
+func (a *ArraySchema) WithMessage(validationType, message string) *ArraySchema {
+	a.customError[validationType] = message
+	return a
+}
 
+func (a *ArraySchema) getErrorMessage(validationType, defaultMessage string) string {
+	if msg, exists := a.customError[validationType]; exists {
+		return msg
+	}
+	return defaultMessage
+}
+
+func (a *ArraySchema) Validate(data interface{}) error {
 	array, ok := data.([]interface{})
 	if !ok {
-
-		switch v := data.(type) {
-		case []string:
-			array = make([]interface{}, len(v))
-			for i := range v {
-				array[i] = v[i]
-			}
-		case []int:
-			array = make([]interface{}, len(v))
-			for i := range v {
-				array[i] = v[i]
-			}
-		default:
-			return zod.NewValidationError("array", data, "invalid type, expected array")
-		}
+		return zod.NewValidationError("array", data, a.getErrorMessage("type", "invalid type, expected array"))
 	}
 
 	if a.required && len(array) == 0 {
-		return zod.NewValidationError("array", data, "array is required")
+		return zod.NewValidationError("array", data, a.getErrorMessage("required", "array is required"))
 	}
 
 	if len(array) < a.minLength {
-		return zod.NewValidationError("array", data, "array is too short")
+		return zod.NewValidationError("array", data, a.getErrorMessage("min", "array is too short"))
 	}
 
 	if len(array) > a.maxLength {
-		return zod.NewValidationError("array", data, "array is too long")
+		return zod.NewValidationError("array", data, a.getErrorMessage("max", "array is too long"))
 	}
 
 	var wg sync.WaitGroup
