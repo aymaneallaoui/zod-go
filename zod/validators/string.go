@@ -34,7 +34,6 @@ func (s *StringSchema) Required() *StringSchema {
 	return s
 }
 
-// WithMessage allows custom error messages for different validation types
 func (s *StringSchema) WithMessage(validationType, message string) *StringSchema {
 	s.customError[validationType] = message
 	return s

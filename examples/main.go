@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/aymaneallaoui/zod-Go/zod"
 	"github.com/aymaneallaoui/zod-Go/zod/validators"
 )
 
 func main() {
-	// Example 1: Custom Error Messages for Strings
+
 	stringSchema := validators.String().Min(3).Max(5).Required().
 		WithMessage("minLength", "This string is too short!").
 		WithMessage("maxLength", "This string is too long!")
@@ -17,7 +18,6 @@ func main() {
 		fmt.Println("Validation failed:", err.(*zod.ValidationError).ErrorJSON())
 	}
 
-	// Example 2: Nested Object Validation with Custom Messages
 	userSchema := validators.Object(map[string]zod.Schema{
 		"name": validators.String().Min(3).Required().
 			WithMessage("required", "Name is a required field!").
@@ -34,7 +34,6 @@ func main() {
 		}).Required(),
 	})
 
-	// Invalid user data
 	userData := map[string]interface{}{
 		"name": "Jo",
 		"age":  17,

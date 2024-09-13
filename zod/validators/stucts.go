@@ -70,18 +70,16 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 				}
 			}
 
-			// If the value is an object, validate recursively and collect errors
 			if subObj, isMap := v.(map[string]interface{}); isMap {
 				if subErr := s.Validate(subObj); subErr != nil {
 					if nestedValidationErr, ok := subErr.(*zod.ValidationError); ok {
-						// Collect nested errors and pass them into NewNestedValidationError
+
 						errChan <- zod.NewNestedValidationError(k, v, "Validation failed", nestedValidationErr.Details)
 					}
 					return
 				}
 			}
 
-			// Handle regular validation errors
 			if err := s.Validate(v); err != nil {
 				errChan <- zod.NewValidationError(k, v, err.Error())
 			}
@@ -93,7 +91,6 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 		close(errChan)
 	}()
 
-	// Collect errors from all fields
 	var combinedErrors []zod.ValidationError
 	for err := range errChan {
 		if validationErr, ok := err.(*zod.ValidationError); ok {
@@ -102,7 +99,7 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 	}
 
 	if len(combinedErrors) > 0 {
-		// Return structured error with nested details
+
 		return zod.NewNestedValidationError("object", data, "Validation failed", combinedErrors)
 	}
 
