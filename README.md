@@ -6,7 +6,7 @@ Zod-Go is a Go-based validation library inspired by the popular Zod library in T
 
 - **Schema Definitions**: Validate strings, numbers, booleans, arrays(sLiCeS), and nested objects.
 - **Custom Error Handling**: Get detailed validation errors with custom messages.
-- **Concurrent Validation**: "Improve" performance for large datasets through concurrent validation.
+- **Concurrent Validation**: "Improve" performance for large shit through concurrent validation.
 - **Optional Fields and Default Values**: Handle optional fields gracefully and set defaults where necessary.
 
 ## Installation
