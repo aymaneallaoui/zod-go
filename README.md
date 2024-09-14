@@ -32,7 +32,7 @@ import (
 func main() {
 	stringSchema := validators.String().
 		Min(3).Max(5).Required().
-		WithMessage("minLength", "This string is too short like arch users D😒!").
+		WithMessage("minLength", "This string is too short like arch users!").
 		WithMessage("maxLength", "This string is too long!")
 
 	err := stringSchema.Validate("ab")
