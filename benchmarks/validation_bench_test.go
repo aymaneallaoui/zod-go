@@ -447,7 +447,8 @@ func BenchmarkRealWorld_UserRegistration(b *testing.B) {
 	userSchema := validators.Object(map[string]zod.Schema{
 		"username": validators.String().Min(3).Max(30).Pattern(`^[a-zA-Z0-9_]+$`).Required(),
 		"email":    validators.String().Email().Required(),
-		"password": validators.String().Min(8).Pattern(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)`).Required(),
+		// Fixed: removed unsupported lookahead, use simpler pattern
+		"password": validators.String().Min(8).Pattern(`^[A-Za-z\d@$!%*?&]{8,}$`).Required(),
 		"age":      validators.Number().Integer().Min(13).Max(120).Required(),
 		"terms":    validators.Bool().True().Required(),
 	})
