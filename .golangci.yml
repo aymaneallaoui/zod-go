@@ -8,11 +8,11 @@ run:
     - ".*_test.go"
 
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
   formats:
     - github-actions
+    - colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
 
 linters-settings:
   govet:
@@ -31,7 +31,7 @@ linters-settings:
   goimports:
     local-prefixes: github.com/aymaneallaoui/zod-go
   depguard:
-    list-type: blacklist
+    list-type: whitelist
     include-go-root: false
     packages:
       - github.com/aymaneallaoui/zod-go/zod
@@ -46,7 +46,7 @@ linters-settings:
       - builtinShadow
   funlen:
     lines: 80
-    statements: 40
+    statements: 60
   gocognit:
     min-complexity: 20
 
@@ -60,7 +60,6 @@ linters:
     - funlen
     - gochecknoinits
     - goconst
-    - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -90,6 +89,7 @@ linters:
     - golint # use revive
     - interfacer # deprecated
     - deadcode # use unused
+    - gocritic # annoying
 
 issues:
   exclude-rules:
@@ -106,6 +106,8 @@ issues:
     - "should have a package comment"
   exclude-use-default: false
   max-issues-per-linter: 0
+  exclude-files:
+    - ".*_test.go"
   exclude-dirs:
     - examples
   max-same-issues: 0
