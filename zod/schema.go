@@ -33,7 +33,6 @@ func Validator(schema Schema, data interface{}, results chan<- Result, wg *sync.
 }
 
 func ValidateConcurrently(schema Schema, dataList []interface{}, workerCount int) []Result {
-
 	results := make(chan Result, len(dataList))
 	var wg sync.WaitGroup
 

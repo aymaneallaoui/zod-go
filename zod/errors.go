@@ -48,7 +48,6 @@ func (v *ValidationError) formatNestedError() string {
 }
 
 func (v *ValidationError) ErrorJSON() string {
-
 	if len(v.Details) > 0 {
 		return v.flattenNestedErrors()
 	}
@@ -70,7 +69,6 @@ func (v *ValidationError) flattenNestedErrors() string {
 }
 
 func (v *ValidationError) collectErrors(flatErrors *[]map[string]string) {
-
 	if v.Field != "" && v.Message != "" {
 		*flatErrors = append(*flatErrors, map[string]string{
 			"field":   v.Field,
