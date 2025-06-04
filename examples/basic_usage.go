@@ -12,7 +12,6 @@ import (
 func basicStringValidation() {
 	fmt.Println("=== Basic String Validation ===")
 
-	// Create a string schema with various constraints
 	schema := validators.String().
 		Min(3).
 		Max(50).
@@ -20,14 +19,12 @@ func basicStringValidation() {
 		WithMessage("minLength", "Username must be at least 3 characters").
 		WithMessage("maxLength", "Username cannot exceed 50 characters")
 
-	// Test valid input
 	if err := schema.Validate("john_doe"); err != nil {
 		fmt.Printf("Validation failed: %v\n", err)
 	} else {
 		fmt.Println("✓ Valid username: john_doe")
 	}
 
-	// Test invalid input
 	if err := schema.Validate("jo"); err != nil {
 		fmt.Printf("✗ Invalid username: %v\n", err)
 	}
@@ -89,7 +86,6 @@ func numberValidation() {
 func arrayValidation() {
 	fmt.Println("=== Array Validation ===")
 
-	// Array of unique strings with length constraints
 	tagsSchema := validators.Array(validators.String().Min(1).Required()).
 		Min(1).
 		Max(5).
@@ -141,7 +137,6 @@ func objectValidation() {
 		fmt.Println("✓ Valid user object")
 	}
 
-	// Invalid user (missing required field)
 	invalidUser := map[string]interface{}{
 		"id":   1,
 		"name": "John Doe",
@@ -194,7 +189,6 @@ func nestedObjectValidation() {
 func customValidation() {
 	fmt.Println("=== Custom Validation ===")
 
-	// Custom validator for password strength
 	passwordValidator := func(s string) error {
 		hasUpper := false
 		hasLower := false
@@ -273,19 +267,16 @@ func concurrentValidation() {
 func schemaComposition() {
 	fmt.Println("=== Schema Composition ===")
 
-	// Base user schema
 	baseUserSchema := validators.Object(map[string]zod.Schema{
 		"id":   validators.Number().Integer().Positive().Required(),
 		"name": validators.String().Min(1).Required(),
 	})
 
-	// Extend base schema for admin user
 	adminUserSchema := baseUserSchema.Extend(map[string]zod.Schema{
 		"role":        validators.String().Pattern(`^(admin|superadmin)$`).Required(),
 		"permissions": validators.Array(validators.String().Required()).Min(1).Required(),
 	})
 
-	// Pick only specific fields
 	publicUserSchema := baseUserSchema.Pick("name")
 
 	adminUser := map[string]interface{}{
@@ -314,7 +305,6 @@ func schemaComposition() {
 	fmt.Println()
 }
 
-// Example 10: Boolean validation with type conversion
 func booleanValidation() {
 	fmt.Println("=== Boolean Validation ===")
 
@@ -343,12 +333,11 @@ func booleanValidation() {
 	fmt.Println()
 }
 
-func basicUsage() {
+func BasicUsage() {
 	fmt.Println("Zod-Go Validation Examples")
 	fmt.Println("==========================")
 	fmt.Println()
 
-	// Run all examples
 	basicStringValidation()
 	emailValidation()
 	numberValidation()
@@ -363,7 +352,6 @@ func basicUsage() {
 	fmt.Println("All examples completed!")
 }
 
-// Helper function to demonstrate error JSON output
 func demonstrateErrorJSON() {
 	schema := validators.Object(map[string]zod.Schema{
 		"user": validators.Object(map[string]zod.Schema{
@@ -387,9 +375,7 @@ func demonstrateErrorJSON() {
 	}
 }
 
-// Example of using the library in a web API context
 func webAPIExample() {
-	// This would typically be in a web handler
 	userRegistrationSchema := validators.Object(map[string]zod.Schema{
 		"username": validators.String().
 			Min(3).Max(30).
@@ -407,7 +393,6 @@ func webAPIExample() {
 		"marketingEmails": validators.Bool().Default(false),
 	}).Strict() // Reject unknown fields
 
-	// Simulate incoming request data
 	requestData := map[string]interface{}{
 		"username":        "john_doe123",
 		"email":           "john@example.com",
@@ -418,11 +403,9 @@ func webAPIExample() {
 	}
 
 	if err := userRegistrationSchema.Validate(requestData); err != nil {
-		// In a real API, you'd return a 400 Bad Request with the error details
 		log.Printf("Registration validation failed: %v", err)
 		return
 	}
 
-	// Continue with user registration...
 	log.Println("User registration data is valid")
 }

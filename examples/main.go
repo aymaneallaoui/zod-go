@@ -89,10 +89,4 @@ func main() {
 	} else {
 		fmt.Println("User validation succeeded")
 	}
-
-	configMain()
-
-	basicUsage()
-
-	apiMain()
 }

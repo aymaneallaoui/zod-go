@@ -66,11 +66,10 @@ var (
 		"active": validators.Bool().Optional(),
 	})
 
-	// API response schema
 	apiResponseSchema = validators.Object(map[string]zod.Schema{
 		"success": validators.Bool().Required(),
 		"message": validators.String().Optional(),
-		"data":    validators.Object(map[string]zod.Schema{}).Optional(), // Any object
+		"data":    validators.Object(map[string]zod.Schema{}).Optional(),
 		"errors":  validators.Array(validators.String().Required()).Optional(),
 		"meta": validators.Object(map[string]zod.Schema{
 			"timestamp": validators.String().Pattern(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`).Required(),
@@ -114,7 +113,6 @@ func ValidationMiddleware(schema zod.Schema) func(http.HandlerFunc) http.Handler
 				return
 			}
 
-			// Store validated data in request context for handlers to use
 			r.Header.Set("X-Validated-Body", "true")
 			next(w, r)
 		}
@@ -130,7 +128,6 @@ func QueryValidationMiddleware(schema zod.Schema) func(http.HandlerFunc) http.Ha
 			for key, values := range r.URL.Query() {
 				if len(values) > 0 {
 					value := values[0]
-					// Try to convert to number if possible
 					if num, err := strconv.Atoi(value); err == nil {
 						query[key] = num
 					} else if b, err := strconv.ParseBool(value); err == nil {
@@ -160,7 +157,6 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var userData map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&userData)
 
-	// Simulate user creation
 	user := map[string]interface{}{
 		"id":         123,
 		"username":   userData["username"],
@@ -177,7 +173,6 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var userData map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&userData)
 
-	// Simulate user update
 	updatedUser := map[string]interface{}{
 		"id":         userData["id"],
 		"username":   userData["username"],
@@ -190,7 +185,6 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listUsersHandler(w http.ResponseWriter, r *http.Request) {
-	// Simulate user listing with pagination
 	users := []map[string]interface{}{
 		{
 			"id":       1,
@@ -269,7 +263,6 @@ func respondWithValidationError(w http.ResponseWriter, validationErr *zod.Valida
 func apiMain() {
 	fmt.Println("=== Zod-Go API Validation Example ===")
 
-	// Setup routes with validation middleware
 	http.HandleFunc("/users",
 		QueryValidationMiddleware(userListQuerySchema)(listUsersHandler))
 
