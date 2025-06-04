@@ -21,11 +21,12 @@ type ArraySchema struct {
 	customError    map[string]string
 }
 
-// Array creates a new array schema with element validation
+// Array creates a new array schema with element validation (optional by default)
 func Array(elementSchema zod.Schema) *ArraySchema {
 	return &ArraySchema{
 		elementSchema: elementSchema,
 		customError:   make(map[string]string),
+		optional:      true, // Default to optional
 	}
 }
 
@@ -182,10 +183,8 @@ func (a *ArraySchema) Validate(data interface{}) error {
 		if a.defaultValue != nil {
 			return a.Validate(a.defaultValue)
 		}
-		if a.optional {
-			return nil
-		}
-		return zod.NewValidationError("", nil, a.getErrorMessage("required", "array is required"))
+		// If optional (default) or explicitly marked optional, allow nil
+		return nil
 	}
 
 	// Convert to slice
