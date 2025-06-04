@@ -19,11 +19,12 @@ type ObjectSchema struct {
 	customError    map[string]string
 }
 
-// Object creates a new object schema with field definitions
+// Object creates a new object schema with field definitions (optional by default)
 func Object(fields map[string]zod.Schema) *ObjectSchema {
 	return &ObjectSchema{
 		fields:      fields,
 		customError: make(map[string]string),
+		optional:    true, // Default to optional
 	}
 }
 
@@ -119,8 +120,8 @@ func isFieldRequired(schema zod.Schema) bool {
 	if objectSchema, ok := schema.(*ObjectSchema); ok {
 		return objectSchema.required
 	}
-	// Default to required if we can't determine
-	return true
+	// Default to optional (not required) - changed from true to false
+	return false
 }
 
 // validateFields validates each field in the object
@@ -200,10 +201,8 @@ func (o *ObjectSchema) Validate(data interface{}) error {
 		if o.defaultValue != nil {
 			return o.Validate(o.defaultValue)
 		}
-		if o.optional {
-			return nil
-		}
-		return zod.NewValidationError("", nil, o.getErrorMessage("required", "object is required"))
+		// If optional (default) or explicitly marked optional, allow nil
+		return nil
 	}
 
 	// Convert to map
@@ -233,16 +232,47 @@ func (o *ObjectSchema) AddField(name string, schema zod.Schema) *ObjectSchema {
 	if o.fields == nil {
 		o.fields = make(map[string]zod.Schema)
 	}
-	o.fields[name] = schema
-	return o
+	newFields := make(map[string]zod.Schema)
+	for k, v := range o.fields {
+		newFields[k] = v
+	}
+	newFields[name] = schema
+	
+	return &ObjectSchema{
+		fields:       newFields,
+		required:     o.required,
+		strict:       o.strict,
+		allowUnknown: o.allowUnknown,
+		customFunc:   o.customFunc,
+		optional:     o.optional,
+		defaultValue: o.defaultValue,
+		customError:  o.customError,
+	}
 }
 
 // RemoveField removes a field from the object schema
 func (o *ObjectSchema) RemoveField(name string) *ObjectSchema {
-	if o.fields != nil {
-		delete(o.fields, name)
+	if o.fields == nil {
+		return o
 	}
-	return o
+	
+	newFields := make(map[string]zod.Schema)
+	for k, v := range o.fields {
+		if k != name {
+			newFields[k] = v
+		}
+	}
+	
+	return &ObjectSchema{
+		fields:       newFields,
+		required:     o.required,
+		strict:       o.strict,
+		allowUnknown: o.allowUnknown,
+		customFunc:   o.customFunc,
+		optional:     o.optional,
+		defaultValue: o.defaultValue,
+		customError:  o.customError,
+	}
 }
 
 // Extend creates a new object schema that extends this one with additional fields
