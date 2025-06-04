@@ -4,7 +4,7 @@ run:
   issues-exit-code: 1
 
 output:
-  format: colored-line-number
+  formats: colored-line-number
   print-issued-lines: true
   print-linter-name: true
 
@@ -62,14 +62,6 @@ linters:
     - lll # line length; too annoying
     - gochecknoglobals # okay to have globals here
     - gocritic # can be too noisy
-    - maligned # deprecated
-    - scopelint # deprecated
-    - gomnd # deprecated
-    - structcheck # deprecated
-    - varcheck # deprecated
-    - golint # deprecated
-    - interfacer # deprecated
-    - deadcode # deprecated
 
 issues:
   exclude-use-default: false
