@@ -49,14 +49,21 @@ func TestNumberSchema(t *testing.T) {
 func TestBoolSchema(t *testing.T) {
 	schema := validators.Bool().Required()
 
+	// Both true and false should be valid for a required boolean
 	err := schema.Validate(false)
-	if err == nil {
-		t.Error("Expected validation error for false boolean")
+	if err != nil {
+		t.Error("Expected validation to pass for false boolean") // Fixed: false is valid
 	}
 
 	err = schema.Validate(true)
 	if err != nil {
-		t.Error("Expected validation to pass")
+		t.Error("Expected validation to pass for true boolean")
+	}
+	
+	// Only nil should fail for required boolean
+	err = schema.Validate(nil)
+	if err == nil {
+		t.Error("Expected validation error for nil required boolean")
 	}
 }
 
