@@ -88,8 +88,8 @@ install-tools: ## Install development tools
 	@echo "Installing development tools..."
 	@go install mvdan.cc/gofumpt@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-	@go install github.com/sonatypecommunity/nancy@latest
+	@curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+	@scoop install nancy
 	@echo "✓ Development tools installed"
 
 dev-setup: install-tools ## Set up development environment
