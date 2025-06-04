@@ -17,10 +17,11 @@ type BoolSchema struct {
 	customError  map[string]string
 }
 
-// Bool creates a new boolean schema
+// Bool creates a new boolean schema (optional by default)
 func Bool() *BoolSchema {
 	return &BoolSchema{
 		customError: make(map[string]string),
+		optional:    true, // Default to optional
 	}
 }
 
@@ -94,13 +95,42 @@ func convertToBool(data interface{}) (bool, bool) {
 		default:
 			return false, false
 		}
-	case int, int8, int16, int32, int64:
-		// Non-zero integers are true
-		return fmt.Sprintf("%v", v) != "0", true
-	case uint, uint8, uint16, uint32, uint64:
-		return fmt.Sprintf("%v", v) != "0", true
-	case float32, float64:
-		return fmt.Sprintf("%v", v) != "0", true
+	case int:
+		return v != 0, true
+	case int8:
+		return v != 0, true
+	case int16:
+		return v != 0, true
+	case int32:
+		return v != 0, true
+	case int64:
+		return v != 0, true
+	case uint:
+		return v != 0, true
+	case uint8:
+		return v != 0, true
+	case uint16:
+		return v != 0, true
+	case uint32:
+		return v != 0, true
+	case uint64:
+		return v != 0, true
+	case float32:
+		// Only accept exact 0.0 or 1.0, reject other float values
+		if v == 0.0 {
+			return false, true
+		} else if v == 1.0 {
+			return true, true
+		}
+		return false, false
+	case float64:
+		// Only accept exact 0.0 or 1.0, reject other float values  
+		if v == 0.0 {
+			return false, true
+		} else if v == 1.0 {
+			return true, true
+		}
+		return false, false
 	default:
 		return false, false
 	}
@@ -116,10 +146,8 @@ func (b *BoolSchema) Validate(data interface{}) error {
 		if b.defaultValue != nil {
 			return b.Validate(*b.defaultValue)
 		}
-		if b.optional {
-			return nil
-		}
-		return zod.NewValidationError("", nil, b.getErrorMessage("required", "boolean field is required"))
+		// If optional (default) or explicitly marked optional, allow nil
+		return nil
 	}
 
 	// Convert to boolean
