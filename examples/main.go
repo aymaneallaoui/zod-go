@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/aymaneallaoui/zod-Go/zod"
-	"github.com/aymaneallaoui/zod-Go/zod/validators"
+	"github.com/aymaneallaoui/zod-go/zod"
+	"github.com/aymaneallaoui/zod-go/zod/validators"
 )
 
 func main() {

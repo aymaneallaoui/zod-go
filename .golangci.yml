@@ -1,0 +1,86 @@
+run:
+  deadline: 5m
+  tests: true
+  issues-exit-code: 1
+
+output:
+  formats: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  gocyclo:
+    min-complexity: 30
+  dupl:
+    threshold: 150
+  goconst:
+    min-len: 4
+    min-occurrences: 4
+  misspell:
+    locale: US
+  funlen:
+    lines: 100
+    statements: 80
+  gocognit:
+    min-complexity: 25
+  goimports:
+    local-prefixes: github.com/aymaneallaoui/zod-go
+  depguard:
+    list-type: blacklist # makes depguard a no-op
+    packages: []
+
+linters:
+  enable:
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocyclo
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - rowserrcheck
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+  disable:
+    - depguard # disabled since list-type is blacklist with empty list
+    - lll # line length; too annoying
+    - gochecknoglobals # okay to have globals here
+    - gocritic # can be too noisy
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude:
+    - "exported .* should have comment or be unexported"
+    - "should have a package comment"
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - gocyclo
+        - dupl
+    - linters:
+        - lll
+      source: "^//go:generate "
+  exclude-files:
+    - ".*_test.go"
+  exclude-dirs:
+    - vendor
+    - examples
