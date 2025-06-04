@@ -4,23 +4,22 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/aymaneallaoui/zod-go/zod"
 )
 
 // StringSchema represents a string validation schema
 type StringSchema struct {
-	minLength      int
-	maxLength      int
-	required       bool
-	pattern        *regexp.Regexp
-	emailFormat    bool
-	urlFormat      bool
-	customFunc     func(string) error
-	optional       bool
-	defaultValue   *string
-	customError    map[string]string
+	minLength    int
+	maxLength    int
+	required     bool
+	pattern      *regexp.Regexp
+	emailFormat  bool
+	urlFormat    bool
+	customFunc   func(string) error
+	optional     bool
+	defaultValue *string
+	customError  map[string]string
 }
 
 // String creates a new string schema
@@ -134,14 +133,14 @@ func (s *StringSchema) Validate(data interface{}) error {
 	// Type check
 	str, ok := data.(string)
 	if !ok {
-		return zod.NewValidationError(fmt.Sprintf("%v", data), data, 
+		return zod.NewValidationError(fmt.Sprintf("%v", data), data,
 			s.getErrorMessage("type", "invalid type, expected string"))
 	}
 
 	// Handle empty strings
 	if str == "" {
 		if s.required {
-			return zod.NewValidationError("", str, 
+			return zod.NewValidationError("", str,
 				s.getErrorMessage("required", "string is required"))
 		}
 		if s.defaultValue != nil {
@@ -154,32 +153,32 @@ func (s *StringSchema) Validate(data interface{}) error {
 
 	// Length validations
 	if s.minLength > 0 && len(str) < s.minLength {
-		return zod.NewValidationError(str, str, 
-			s.getErrorMessage("minLength", 
+		return zod.NewValidationError(str, str,
+			s.getErrorMessage("minLength",
 				fmt.Sprintf("string is too short, minimum length is %d", s.minLength)))
 	}
 
 	if s.maxLength > 0 && len(str) > s.maxLength {
-		return zod.NewValidationError(str, str, 
-			s.getErrorMessage("maxLength", 
+		return zod.NewValidationError(str, str,
+			s.getErrorMessage("maxLength",
 				fmt.Sprintf("string is too long, maximum length is %d", s.maxLength)))
 	}
 
 	// Pattern validation
 	if s.pattern != nil && !s.pattern.MatchString(str) {
-		return zod.NewValidationError(str, str, 
+		return zod.NewValidationError(str, str,
 			s.getErrorMessage("pattern", "string does not match required pattern"))
 	}
 
 	// Email validation
 	if s.emailFormat && !isValidEmail(str) {
-		return zod.NewValidationError(str, str, 
+		return zod.NewValidationError(str, str,
 			s.getErrorMessage("email", "invalid email format"))
 	}
 
 	// URL validation
 	if s.urlFormat && !isValidURL(str) {
-		return zod.NewValidationError(str, str, 
+		return zod.NewValidationError(str, str,
 			s.getErrorMessage("url", "invalid URL format"))
 	}
 

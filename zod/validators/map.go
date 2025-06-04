@@ -1,6 +1,6 @@
 package validators
 
-import "github.com/aymaneallaoui/zod-Go/zod"
+import "github.com/aymaneallaoui/zod-go/zod"
 
 type MapSchema struct {
 	keySchema   zod.Schema

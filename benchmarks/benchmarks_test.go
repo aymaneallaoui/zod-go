@@ -3,8 +3,8 @@ package benchmarks
 import (
 	"testing"
 
-	"github.com/aymaneallaoui/zod-Go/zod"
-	"github.com/aymaneallaoui/zod-Go/zod/validators"
+	"github.com/aymaneallaoui/zod-go/zod"
+	"github.com/aymaneallaoui/zod-go/zod/validators"
 )
 
 func BenchmarkStringSchema(b *testing.B) {
