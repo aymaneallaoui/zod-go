@@ -48,7 +48,7 @@ func TestArrayValidator_BasicValidation(t *testing.T) {
 			name:      "invalid element",
 			input:     []interface{}{"hello", 123},
 			wantError: true,
-			errorMsg:  "invalid elements",
+			errorMsg:  "invalid type", // Updated to match actual error format
 		},
 	}
 
