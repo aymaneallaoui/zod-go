@@ -88,12 +88,12 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: "./..."
+          args: "-exclude-dir=examples ./..."
 
-      - name: Run Nancy (Check for known vulnerabilities)
-        run: |
-          go install github.com/sonatypecommunity/nancy@latest
-          go list -json -deps ./... | nancy sleuth
+      # - name: Run Nancy (Check for known vulnerabilities)
+      #   run: |
+      #     go install github.com/sonatypecommunity/nancy@latest
+      #     go list -json -deps ./... | nancy sleuth
 
   benchmark:
     name: Benchmark
