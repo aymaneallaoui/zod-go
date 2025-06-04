@@ -91,7 +91,7 @@ func TestArrayValidator_RequiredValidation(t *testing.T) {
 
 func TestArrayValidator_LengthValidation(t *testing.T) {
 	elementSchema := validators.String().Required()
-	
+
 	tests := []struct {
 		name      string
 		schema    *validators.ArraySchema
@@ -471,7 +471,7 @@ func TestArrayValidator_HelperMethods(t *testing.T) {
 func TestArrayValidator_DefaultValues(t *testing.T) {
 	defaultArray := []interface{}{"default1", "default2"}
 	schema := validators.Array(validators.String().Required()).Default(defaultArray)
-	
+
 	// Test with nil - should use default
 	err := schema.Validate(nil)
 	if err != nil {

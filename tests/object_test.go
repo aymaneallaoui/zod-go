@@ -285,11 +285,11 @@ func TestObjectValidator_CustomValidation(t *testing.T) {
 	ageConsistencyValidator := func(obj map[string]interface{}) error {
 		age, hasAge := obj["age"]
 		birthYear, hasBirthYear := obj["birthYear"]
-		
+
 		if hasAge && hasBirthYear {
 			ageVal, ok1 := age.(float64)
 			birthYearVal, ok2 := birthYear.(float64)
-			
+
 			if ok1 && ok2 {
 				currentYear := 2024.0
 				expectedAge := currentYear - birthYearVal
@@ -350,7 +350,7 @@ func TestObjectValidator_FieldManagement(t *testing.T) {
 
 	t.Run("AddField", func(t *testing.T) {
 		schema := baseSchema.AddField("email", validators.String().Email().Required())
-		
+
 		err := schema.Validate(map[string]interface{}{
 			"name":  "John",
 			"age":   30,
@@ -359,7 +359,7 @@ func TestObjectValidator_FieldManagement(t *testing.T) {
 		if err != nil {
 			t.Errorf("AddField validation failed: %v", err)
 		}
-		
+
 		// Should fail without email
 		err = schema.Validate(map[string]interface{}{
 			"name": "John",
@@ -372,7 +372,7 @@ func TestObjectValidator_FieldManagement(t *testing.T) {
 
 	t.Run("RemoveField", func(t *testing.T) {
 		schema := baseSchema.RemoveField("age")
-		
+
 		err := schema.Validate(map[string]interface{}{
 			"name": "John",
 			// age is removed, so it's not required
@@ -394,7 +394,7 @@ func TestObjectValidator_SchemaComposition(t *testing.T) {
 			"email": validators.String().Email().Required(),
 			"phone": validators.String().Optional(),
 		})
-		
+
 		err := extendedSchema.Validate(map[string]interface{}{
 			"name":  "John",
 			"age":   30,
@@ -403,7 +403,7 @@ func TestObjectValidator_SchemaComposition(t *testing.T) {
 		if err != nil {
 			t.Errorf("Extend validation failed: %v", err)
 		}
-		
+
 		// Should fail without email (new required field)
 		err = extendedSchema.Validate(map[string]interface{}{
 			"name": "John",
@@ -416,7 +416,7 @@ func TestObjectValidator_SchemaComposition(t *testing.T) {
 
 	t.Run("Pick", func(t *testing.T) {
 		pickedSchema := baseSchema.Pick("name")
-		
+
 		err := pickedSchema.Validate(map[string]interface{}{
 			"name": "John",
 			// age is not required in picked schema
@@ -428,7 +428,7 @@ func TestObjectValidator_SchemaComposition(t *testing.T) {
 
 	t.Run("Omit", func(t *testing.T) {
 		omittedSchema := baseSchema.Omit("age")
-		
+
 		err := omittedSchema.Validate(map[string]interface{}{
 			"name": "John",
 			// age is omitted, so it's not required
@@ -505,7 +505,7 @@ func TestObjectValidator_HelperMethods(t *testing.T) {
 		schema := validators.StrictObject(map[string]zod.Schema{
 			"name": validators.String().Required(),
 		})
-		
+
 		err := schema.Validate(map[string]interface{}{
 			"name":    "John",
 			"unknown": "field",
@@ -519,7 +519,7 @@ func TestObjectValidator_HelperMethods(t *testing.T) {
 		schema := validators.OptionalObject(map[string]zod.Schema{
 			"name": validators.String().Required(),
 		})
-		
+
 		err := schema.Validate(nil)
 		if err != nil {
 			t.Errorf("OptionalObject should allow nil: %v", err)
@@ -528,26 +528,26 @@ func TestObjectValidator_HelperMethods(t *testing.T) {
 
 	t.Run("UserSchema", func(t *testing.T) {
 		schema := validators.UserSchema()
-		
+
 		user := map[string]interface{}{
 			"id":    1,
 			"name":  "John Doe",
 			"email": "john@example.com",
 			"age":   30,
 		}
-		
+
 		err := schema.Validate(user)
 		if err != nil {
 			t.Errorf("UserSchema validation failed: %v", err)
 		}
-		
+
 		// Test invalid email
 		invalidUser := map[string]interface{}{
 			"id":    1,
 			"name":  "John Doe",
 			"email": "invalid-email",
 		}
-		
+
 		err = schema.Validate(invalidUser)
 		if err == nil {
 			t.Error("UserSchema should reject invalid email")
@@ -556,25 +556,25 @@ func TestObjectValidator_HelperMethods(t *testing.T) {
 
 	t.Run("AddressSchema", func(t *testing.T) {
 		schema := validators.AddressSchema()
-		
+
 		address := map[string]interface{}{
-			"street": "123 Main St",
-			"city":   "New York",
-			"state":  "NY",
+			"street":  "123 Main St",
+			"city":    "New York",
+			"state":   "NY",
 			"zipCode": "10001",
 		}
-		
+
 		err := schema.Validate(address)
 		if err != nil {
 			t.Errorf("AddressSchema validation failed: %v", err)
 		}
-		
+
 		// Test with default country
 		minimalAddress := map[string]interface{}{
 			"street": "123 Main St",
 			"city":   "New York",
 		}
-		
+
 		err = schema.Validate(minimalAddress)
 		if err != nil {
 			t.Errorf("AddressSchema with defaults failed: %v", err)
@@ -587,12 +587,12 @@ func TestObjectValidator_DefaultValues(t *testing.T) {
 		"name": "Default Name",
 		"age":  0,
 	}
-	
+
 	schema := validators.Object(map[string]zod.Schema{
 		"name": validators.String().Required(),
 		"age":  validators.Number().Required(),
 	}).Default(defaultObj)
-	
+
 	// Test with nil - should use default
 	err := schema.Validate(nil)
 	if err != nil {

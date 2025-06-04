@@ -262,10 +262,10 @@ func TestBoolValidator_CustomMessages(t *testing.T) {
 
 func TestBoolValidator_DefaultValues(t *testing.T) {
 	tests := []struct {
-		name         string
-		schema       *validators.BoolSchema
-		input        interface{}
-		expectError  bool
+		name        string
+		schema      *validators.BoolSchema
+		input       interface{}
+		expectError bool
 	}{
 		{
 			name:        "default true",
@@ -402,10 +402,10 @@ func TestBoolValidator_EdgeCases(t *testing.T) {
 		{"mixed case", "TrUe", true}, // Only exact case matches work
 		{"partial match", "tr", true},
 		{"extra characters", "true ", true},
-		
+
 		// Edge cases for numeric conversion
-		{"float 0.1", 0.1, true}, // Non-zero, non-one float
-		{"negative zero", -0.0, false}, // Should be false
+		{"float 0.1", 0.1, true},              // Non-zero, non-one float
+		{"negative zero", -0.0, false},        // Should be false
 		{"very large number", 1000000, false}, // Fixed: should NOT error (Non-zero)
 		{"very small positive", 0.0001, true}, // Non-zero
 	}
@@ -423,16 +423,16 @@ func TestBoolValidator_EdgeCases(t *testing.T) {
 func TestBoolValidator_ConflictingRequirements(t *testing.T) {
 	// Test conflicting requirements (both True and False)
 	// This should be handled gracefully - the last one wins or it's an error
-	
+
 	t.Run("True then False", func(t *testing.T) {
 		schema := validators.Bool().True().False()
-		
+
 		// Should require false (last constraint wins)
 		err := schema.Validate(false)
 		if err != nil {
 			t.Errorf("Conflicting requirements should use last constraint: %v", err)
 		}
-		
+
 		err = schema.Validate(true)
 		if err == nil {
 			t.Error("Should reject true when false is required")
@@ -441,13 +441,13 @@ func TestBoolValidator_ConflictingRequirements(t *testing.T) {
 
 	t.Run("False then True", func(t *testing.T) {
 		schema := validators.Bool().False().True()
-		
+
 		// Should require true (last constraint wins)
 		err := schema.Validate(true)
 		if err != nil {
 			t.Errorf("Conflicting requirements should use last constraint: %v", err)
 		}
-		
+
 		err = schema.Validate(false)
 		if err == nil {
 			t.Error("Should reject false when true is required")

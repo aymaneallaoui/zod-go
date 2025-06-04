@@ -59,7 +59,7 @@ func TestBoolSchema(t *testing.T) {
 	if err != nil {
 		t.Error("Expected validation to pass for true boolean")
 	}
-	
+
 	// Only nil should fail for required boolean
 	err = schema.Validate(nil)
 	if err == nil {

@@ -73,7 +73,7 @@ func TestNumberValidator_BasicValidation(t *testing.T) {
 
 func TestNumberValidator_TypeConversion(t *testing.T) {
 	schema := validators.Number()
-	
+
 	tests := []struct {
 		name      string
 		input     interface{}
@@ -166,7 +166,7 @@ func TestNumberValidator_RangeValidation(t *testing.T) {
 
 func TestNumberValidator_IntegerValidation(t *testing.T) {
 	schema := validators.Number().Integer()
-	
+
 	tests := []struct {
 		name      string
 		input     interface{}
@@ -247,7 +247,7 @@ func TestNumberValidator_MultipleOfValidation(t *testing.T) {
 
 func TestNumberValidator_SpecialValues(t *testing.T) {
 	schema := validators.Number()
-	
+
 	tests := []struct {
 		name      string
 		input     float64
@@ -319,7 +319,7 @@ func TestNumberValidator_CustomValidation(t *testing.T) {
 	}
 
 	schema := validators.Number().Custom(isPrime)
-	
+
 	tests := []struct {
 		name      string
 		input     float64
@@ -418,7 +418,7 @@ func TestNumberValidator_HelperMethods(t *testing.T) {
 
 func TestNumberValidator_DefaultValues(t *testing.T) {
 	schema := validators.Number().Default(42.0)
-	
+
 	// Test with nil - should use default
 	err := schema.Validate(nil)
 	if err != nil {

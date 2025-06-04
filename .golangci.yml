@@ -11,14 +11,14 @@ output:
   format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
+  formats:
+    - github-actions
 
 linters-settings:
   govet:
     check-shadowing: true
-  golint:
-    min-confidence: 0.8
   gocyclo:
-    min-complexity: 15
+    min-complexity: 50
   maligned:
     suggest-new: true
   dupl:
@@ -28,10 +28,13 @@ linters-settings:
     min-occurrences: 3
   misspell:
     locale: US
-  lll:
-    line-length: 120
   goimports:
     local-prefixes: github.com/aymaneallaoui/zod-go
+  depguard:
+    list-type: blacklist
+    include-go-root: false
+    packages:
+      - github.com/aymaneallaoui/zod-go/zod
   gocritic:
     enabled-tags:
       - performance
@@ -39,6 +42,8 @@ linters-settings:
       - experimental
     disabled-checks:
       - wrapperFunc
+    enabled-checks:
+      - builtinShadow
   funlen:
     lines: 80
     statements: 40
@@ -48,7 +53,6 @@ linters-settings:
 linters:
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -60,37 +64,37 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
-    - gomnd
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
-    - lll
     - misspell
     - nakedret
     - rowserrcheck
-    - scopelint
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
   disable:
-    - maligned # deprecated
     - gochecknoglobals # too strict for this project
+    - lll
+    - maligned # remove this
+    - scopelint # replace with exportloopref
+    - gomnd # use mnd
+    - structcheck # use unused
+    - varcheck # use unused
+    - golint # use revive
+    - interfacer # deprecated
+    - deadcode # use unused
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
         - funlen
         - gocyclo
         - dupl
@@ -102,5 +106,7 @@ issues:
     - "should have a package comment"
   exclude-use-default: false
   max-issues-per-linter: 0
+  exclude-dirs:
+    - examples
   max-same-issues: 0
   new: false

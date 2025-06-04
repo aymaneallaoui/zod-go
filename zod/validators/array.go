@@ -139,7 +139,7 @@ func getComparableKey(element interface{}) interface{} {
 // validateElements validates each element in the array
 func (a *ArraySchema) validateElements(slice []interface{}) error {
 	var errors []zod.ValidationError
-	
+
 	for i, element := range slice {
 		if err := a.elementSchema.Validate(element); err != nil {
 			if validationErr, ok := err.(*zod.ValidationError); ok {
@@ -160,7 +160,7 @@ func (a *ArraySchema) validateElements(slice []interface{}) error {
 			}
 		}
 	}
-	
+
 	if len(errors) > 0 {
 		return zod.NewNestedValidationError(
 			"array",
@@ -169,7 +169,7 @@ func (a *ArraySchema) validateElements(slice []interface{}) error {
 			errors,
 		)
 	}
-	
+
 	return nil
 }
 
@@ -196,7 +196,7 @@ func (a *ArraySchema) Validate(data interface{}) error {
 
 	// Length validations
 	length := len(slice)
-	
+
 	if a.nonEmpty && length == 0 {
 		return zod.NewValidationError("[]", slice,
 			a.getErrorMessage("nonEmpty", "array cannot be empty"))

@@ -9,18 +9,18 @@ import (
 
 // NumberSchema represents a number validation schema
 type NumberSchema struct {
-	minValue       *float64
-	maxValue       *float64
-	required       bool
-	integerOnly    bool
-	positiveOnly   bool
-	negativeOnly   bool
-	nonZero        bool
-	multipleOf     *float64
-	customFunc     func(float64) error
-	optional       bool
-	defaultValue   *float64
-	customError    map[string]string
+	minValue     *float64
+	maxValue     *float64
+	required     bool
+	integerOnly  bool
+	positiveOnly bool
+	negativeOnly bool
+	nonZero      bool
+	multipleOf   *float64
+	customFunc   func(float64) error
+	optional     bool
+	defaultValue *float64
+	customError  map[string]string
 }
 
 // Number creates a new number schema

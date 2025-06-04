@@ -222,9 +222,9 @@ func TestStringValidator_CustomMessages(t *testing.T) {
 		WithMessage("required", "Custom required error")
 
 	tests := []struct {
-		name         string
-		input        interface{}
-		expectedMsg  string
+		name        string
+		input       interface{}
+		expectedMsg string
 	}{
 		{"custom required message", nil, "Custom required error"},
 		{"custom min length message", "hi", "Custom min length error"},
@@ -247,7 +247,7 @@ func TestStringValidator_CustomMessages(t *testing.T) {
 
 func TestStringValidator_DefaultValues(t *testing.T) {
 	schema := validators.String().Default("default value")
-	
+
 	// This test assumes the validator would somehow apply defaults
 	// In a real implementation, you might need a separate method to get the processed value
 	err := schema.Validate(nil)
@@ -266,7 +266,7 @@ func TestStringValidator_CustomValidation(t *testing.T) {
 	}
 
 	schema := validators.String().Custom(adminValidator)
-	
+
 	tests := []struct {
 		name      string
 		input     string

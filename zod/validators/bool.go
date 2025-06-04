@@ -124,7 +124,7 @@ func convertToBool(data interface{}) (bool, bool) {
 		}
 		return false, false
 	case float64:
-		// Only accept exact 0.0 or 1.0, reject other float values  
+		// Only accept exact 0.0 or 1.0, reject other float values
 		if v == 0.0 {
 			return false, true
 		} else if v == 1.0 {

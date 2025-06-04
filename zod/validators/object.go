@@ -9,14 +9,14 @@ import (
 
 // ObjectSchema represents an object validation schema
 type ObjectSchema struct {
-	fields         map[string]zod.Schema
-	required       bool
-	strict         bool
-	allowUnknown   bool
-	customFunc     func(map[string]interface{}) error
-	optional       bool
-	defaultValue   map[string]interface{}
-	customError    map[string]string
+	fields       map[string]zod.Schema
+	required     bool
+	strict       bool
+	allowUnknown bool
+	customFunc   func(map[string]interface{}) error
+	optional     bool
+	defaultValue map[string]interface{}
+	customError  map[string]string
 }
 
 // Object creates a new object schema with field definitions (optional by default)
@@ -131,7 +131,7 @@ func (o *ObjectSchema) validateFields(obj map[string]interface{}) error {
 	// Validate defined fields
 	for fieldName, fieldSchema := range o.fields {
 		value, exists := obj[fieldName]
-		
+
 		if !exists {
 			// Check if field is required
 			if isFieldRequired(fieldSchema) {
@@ -237,7 +237,7 @@ func (o *ObjectSchema) AddField(name string, schema zod.Schema) *ObjectSchema {
 		newFields[k] = v
 	}
 	newFields[name] = schema
-	
+
 	return &ObjectSchema{
 		fields:       newFields,
 		required:     o.required,
@@ -255,14 +255,14 @@ func (o *ObjectSchema) RemoveField(name string) *ObjectSchema {
 	if o.fields == nil {
 		return o
 	}
-	
+
 	newFields := make(map[string]zod.Schema)
 	for k, v := range o.fields {
 		if k != name {
 			newFields[k] = v
 		}
 	}
-	
+
 	return &ObjectSchema{
 		fields:       newFields,
 		required:     o.required,
@@ -278,17 +278,17 @@ func (o *ObjectSchema) RemoveField(name string) *ObjectSchema {
 // Extend creates a new object schema that extends this one with additional fields
 func (o *ObjectSchema) Extend(additionalFields map[string]zod.Schema) *ObjectSchema {
 	newFields := make(map[string]zod.Schema)
-	
+
 	// Copy existing fields
 	for name, schema := range o.fields {
 		newFields[name] = schema
 	}
-	
+
 	// Add new fields
 	for name, schema := range additionalFields {
 		newFields[name] = schema
 	}
-	
+
 	return &ObjectSchema{
 		fields:       newFields,
 		required:     o.required,
@@ -304,13 +304,13 @@ func (o *ObjectSchema) Extend(additionalFields map[string]zod.Schema) *ObjectSch
 // Pick creates a new object schema with only the specified fields
 func (o *ObjectSchema) Pick(fieldNames ...string) *ObjectSchema {
 	newFields := make(map[string]zod.Schema)
-	
+
 	for _, name := range fieldNames {
 		if schema, exists := o.fields[name]; exists {
 			newFields[name] = schema
 		}
 	}
-	
+
 	return Object(newFields)
 }
 
@@ -320,14 +320,14 @@ func (o *ObjectSchema) Omit(fieldNames ...string) *ObjectSchema {
 	for _, name := range fieldNames {
 		omitSet[name] = true
 	}
-	
+
 	newFields := make(map[string]zod.Schema)
 	for name, schema := range o.fields {
 		if !omitSet[name] {
 			newFields[name] = schema
 		}
 	}
-	
+
 	return Object(newFields)
 }
 
@@ -356,10 +356,10 @@ func UserSchema() *ObjectSchema {
 // AddressSchema creates a common address object schema
 func AddressSchema() *ObjectSchema {
 	return Object(map[string]zod.Schema{
-		"street":   String().Min(1).Required(),
-		"city":     String().Min(1).Required(),
-		"state":    String().Min(2).Max(2).Optional(),
-		"zipCode":  String().Pattern(`^\d{5}(-\d{4})?$`).Optional(),
-		"country":  String().Min(2).Default("US"),
+		"street":  String().Min(1).Required(),
+		"city":    String().Min(1).Required(),
+		"state":   String().Min(2).Max(2).Optional(),
+		"zipCode": String().Pattern(`^\d{5}(-\d{4})?$`).Optional(),
+		"country": String().Min(2).Default("US"),
 	})
 }
