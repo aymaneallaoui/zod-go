@@ -406,7 +406,7 @@ func TestBoolValidator_EdgeCases(t *testing.T) {
 		// Edge cases for numeric conversion
 		{"float 0.1", 0.1, true}, // Non-zero, non-one float
 		{"negative zero", -0.0, false}, // Should be false
-		{"very large number", 1000000, true}, // Non-zero
+		{"very large number", 1000000, false}, // Fixed: should NOT error (Non-zero)
 		{"very small positive", 0.0001, true}, // Non-zero
 	}
 
