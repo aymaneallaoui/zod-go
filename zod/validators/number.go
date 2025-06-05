@@ -100,8 +100,9 @@ func (n *NumberSchema) Custom(fn func(float64) error) *NumberSchema {
 }
 
 // WithMessage sets a custom error message for a validation type
-func (n *NumberSchema) WithMessage(validationType, message string) *NumberSchema {
-	n.customError[validationType] = message
+// Now uses ValidationTypeConstant for better autocompletion and type safety
+func (n *NumberSchema) WithMessage(validationType zod.ValidationTypeConstant, message string) *NumberSchema {
+	n.customError[validationType.String()] = message
 	return n
 }
 
@@ -164,7 +165,7 @@ func (n *NumberSchema) Validate(data interface{}) error {
 	// Handle nil values
 	if data == nil {
 		if n.required {
-			return zod.NewValidationError("", nil, n.getErrorMessage("required", "field is required"))
+			return zod.NewValidationError("", nil, n.getErrorMessage(zod.ValidationTypeRequired.String(), "field is required"))
 		}
 		if n.defaultValue != nil {
 			return n.Validate(*n.defaultValue)
@@ -172,14 +173,14 @@ func (n *NumberSchema) Validate(data interface{}) error {
 		if n.optional {
 			return nil
 		}
-		return zod.NewValidationError("", nil, n.getErrorMessage("required", "field is required"))
+		return zod.NewValidationError("", nil, n.getErrorMessage(zod.ValidationTypeRequired.String(), "field is required"))
 	}
 
 	// Type conversion
 	value, ok := convertToFloat64(data)
 	if !ok {
 		return zod.NewValidationError(fmt.Sprintf("%v", data), data,
-			n.getErrorMessage("type", "invalid type, expected number"))
+			n.getErrorMessage(zod.ValidationTypeType.String(), "invalid type, expected number"))
 	}
 
 	// Check for special float values
@@ -196,29 +197,29 @@ func (n *NumberSchema) Validate(data interface{}) error {
 	// Integer validation
 	if n.integerOnly && !isInteger(value) {
 		return zod.NewValidationError(fmt.Sprintf("%v", value), value,
-			n.getErrorMessage("integer", "value must be an integer"))
+			n.getErrorMessage(zod.ValidationTypeInteger.String(), "value must be an integer"))
 	}
 
 	// Range validations
 	if n.minValue != nil && value < *n.minValue {
 		return zod.NewValidationError(fmt.Sprintf("%v", value), value,
-			n.getErrorMessage("min", fmt.Sprintf("value must be at least %g", *n.minValue)))
+			n.getErrorMessage(zod.ValidationTypeMin.String(), fmt.Sprintf("value must be at least %g", *n.minValue)))
 	}
 
 	if n.maxValue != nil && value > *n.maxValue {
 		return zod.NewValidationError(fmt.Sprintf("%v", value), value,
-			n.getErrorMessage("max", fmt.Sprintf("value must be at most %g", *n.maxValue)))
+			n.getErrorMessage(zod.ValidationTypeMax.String(), fmt.Sprintf("value must be at most %g", *n.maxValue)))
 	}
 
 	// Sign validations
 	if n.positiveOnly && value <= 0 {
 		return zod.NewValidationError(fmt.Sprintf("%v", value), value,
-			n.getErrorMessage("positive", "value must be positive"))
+			n.getErrorMessage(zod.ValidationTypePositive.String(), "value must be positive"))
 	}
 
 	if n.negativeOnly && value >= 0 {
 		return zod.NewValidationError(fmt.Sprintf("%v", value), value,
-			n.getErrorMessage("negative", "value must be negative"))
+			n.getErrorMessage(zod.ValidationTypeNegative.String(), "value must be negative"))
 	}
 
 	if n.nonZero && value == 0 {
