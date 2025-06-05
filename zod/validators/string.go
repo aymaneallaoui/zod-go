@@ -87,8 +87,9 @@ func (s *StringSchema) Custom(fn func(string) error) *StringSchema {
 }
 
 // WithMessage sets a custom error message for a validation type
-func (s *StringSchema) WithMessage(validationType, message string) *StringSchema {
-	s.customError[validationType] = message
+// Now uses ValidationTypeConstant for better autocompletion and type safety
+func (s *StringSchema) WithMessage(validationType zod.ValidationTypeConstant, message string) *StringSchema {
+	s.customError[validationType.String()] = message
 	return s
 }
 
@@ -117,7 +118,7 @@ func (s *StringSchema) Validate(data interface{}) error {
 	// Handle nil values
 	if data == nil {
 		if s.required {
-			return zod.NewValidationError("", nil, s.getErrorMessage("required", "field is required"))
+			return zod.NewValidationError("", nil, s.getErrorMessage(zod.ValidationTypeRequired.String(), "field is required"))
 		}
 		if s.defaultValue != nil {
 			// In a real implementation, you might want to modify the data
@@ -127,21 +128,21 @@ func (s *StringSchema) Validate(data interface{}) error {
 		if s.optional {
 			return nil
 		}
-		return zod.NewValidationError("", nil, s.getErrorMessage("required", "field is required"))
+		return zod.NewValidationError("", nil, s.getErrorMessage(zod.ValidationTypeRequired.String(), "field is required"))
 	}
 
 	// Type check
 	str, ok := data.(string)
 	if !ok {
 		return zod.NewValidationError(fmt.Sprintf("%v", data), data,
-			s.getErrorMessage("type", "invalid type, expected string"))
+			s.getErrorMessage(zod.ValidationTypeType.String(), "invalid type, expected string"))
 	}
 
 	// Handle empty strings
 	if str == "" {
 		if s.required {
 			return zod.NewValidationError("", str,
-				s.getErrorMessage("required", "string is required"))
+				s.getErrorMessage(zod.ValidationTypeRequired.String(), "string is required"))
 		}
 		if s.defaultValue != nil {
 			return s.Validate(*s.defaultValue)
@@ -154,32 +155,32 @@ func (s *StringSchema) Validate(data interface{}) error {
 	// Length validations
 	if s.minLength > 0 && len(str) < s.minLength {
 		return zod.NewValidationError(str, str,
-			s.getErrorMessage("minLength",
+			s.getErrorMessage(zod.ValidationTypeMinLength.String(),
 				fmt.Sprintf("string is too short, minimum length is %d", s.minLength)))
 	}
 
 	if s.maxLength > 0 && len(str) > s.maxLength {
 		return zod.NewValidationError(str, str,
-			s.getErrorMessage("maxLength",
+			s.getErrorMessage(zod.ValidationTypeMaxLength.String(),
 				fmt.Sprintf("string is too long, maximum length is %d", s.maxLength)))
 	}
 
 	// Pattern validation
 	if s.pattern != nil && !s.pattern.MatchString(str) {
 		return zod.NewValidationError(str, str,
-			s.getErrorMessage("pattern", "string does not match required pattern"))
+			s.getErrorMessage(zod.ValidationTypePattern.String(), "string does not match required pattern"))
 	}
 
 	// Email validation
 	if s.emailFormat && !isValidEmail(str) {
 		return zod.NewValidationError(str, str,
-			s.getErrorMessage("email", "invalid email format"))
+			s.getErrorMessage(zod.ValidationTypeEmail.String(), "invalid email format"))
 	}
 
 	// URL validation
 	if s.urlFormat && !isValidURL(str) {
 		return zod.NewValidationError(str, str,
-			s.getErrorMessage("url", "invalid URL format"))
+			s.getErrorMessage(zod.ValidationTypeURL.String(), "invalid URL format"))
 	}
 
 	// Custom validation
