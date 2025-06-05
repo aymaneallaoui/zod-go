@@ -9,16 +9,22 @@ import (
 
 // ArraySchema represents an array validation schema
 type ArraySchema struct {
-	elementSchema  zod.Schema
-	minLength      int
-	maxLength      int
-	required       bool
-	uniqueElements bool
-	nonEmpty       bool
-	customFunc     func([]interface{}) error
-	optional       bool
-	defaultValue   []interface{}
-	customError    map[string]string
+	elementSchema   zod.Schema
+	minLength       int
+	maxLength       int
+	required        bool
+	uniqueElements  bool
+	nonEmpty        bool
+	customFunc      func([]interface{}) error
+	optional        bool
+	defaultValue    []interface{}
+	customError     map[string]string
+}
+
+// UniqueArraySchema represents an array schema that has unique constraint applied
+// This prevents calling Unique() multiple times and provides better method chaining
+type UniqueArraySchema struct {
+	*ArraySchema
 }
 
 // Array creates a new array schema with element validation (optional by default)
@@ -63,10 +69,10 @@ func (a *ArraySchema) Default(value []interface{}) *ArraySchema {
 	return a
 }
 
-// Unique requires all elements to be unique
-func (a *ArraySchema) Unique() *ArraySchema {
+// Unique requires all elements to be unique - returns UniqueArraySchema to prevent double calling
+func (a *ArraySchema) Unique() *UniqueArraySchema {
 	a.uniqueElements = true
-	return a
+	return &UniqueArraySchema{ArraySchema: a}
 }
 
 // NonEmpty requires the array to have at least one element
@@ -82,10 +88,59 @@ func (a *ArraySchema) Custom(fn func([]interface{}) error) *ArraySchema {
 }
 
 // WithMessage sets a custom error message for a validation type
-func (a *ArraySchema) WithMessage(validationType, message string) *ArraySchema {
-	a.customError[validationType] = message
+// Now uses ValidationTypeConstant for better autocompletion and type safety
+func (a *ArraySchema) WithMessage(validationType zod.ValidationTypeConstant, message string) *ArraySchema {
+	a.customError[validationType.String()] = message
 	return a
 }
+
+// Methods for UniqueArraySchema - provide the same interface but prevent calling Unique() again
+
+// Min sets the minimum array length requirement for unique arrays
+func (u *UniqueArraySchema) Min(length int) *UniqueArraySchema {
+	u.ArraySchema.minLength = length
+	return u
+}
+
+// Max sets the maximum array length requirement for unique arrays
+func (u *UniqueArraySchema) Max(length int) *UniqueArraySchema {
+	u.ArraySchema.maxLength = length
+	return u
+}
+
+// Required marks the unique array as required
+func (u *UniqueArraySchema) Required() *UniqueArraySchema {
+	u.ArraySchema.required = true
+	u.ArraySchema.optional = false
+	return u
+}
+
+// Optional marks the unique array as optional
+func (u *UniqueArraySchema) Optional() *UniqueArraySchema {
+	u.ArraySchema.optional = true
+	u.ArraySchema.required = false
+	return u
+}
+
+// NonEmpty requires the unique array to have at least one element
+func (u *UniqueArraySchema) NonEmpty() *UniqueArraySchema {
+	u.ArraySchema.nonEmpty = true
+	return u
+}
+
+// Custom adds a custom validation function to unique arrays
+func (u *UniqueArraySchema) Custom(fn func([]interface{}) error) *UniqueArraySchema {
+	u.ArraySchema.customFunc = fn
+	return u
+}
+
+// WithMessage sets a custom error message for unique arrays
+func (u *UniqueArraySchema) WithMessage(validationType zod.ValidationTypeConstant, message string) *UniqueArraySchema {
+	u.ArraySchema.customError[validationType.String()] = message
+	return u
+}
+
+// Note: UniqueArraySchema does NOT have a Unique() method, preventing double application
 
 // getErrorMessage returns custom or default error message
 func (a *ArraySchema) getErrorMessage(validationType, defaultMessage string) string {
@@ -165,7 +220,7 @@ func (a *ArraySchema) validateElements(slice []interface{}) error {
 		return zod.NewNestedValidationError(
 			"array",
 			slice,
-			a.getErrorMessage("elements", "array contains invalid elements"),
+			a.getErrorMessage(zod.ValidationTypeElements.String(), "array contains invalid elements"),
 			errors,
 		)
 	}
@@ -178,7 +233,7 @@ func (a *ArraySchema) Validate(data interface{}) error {
 	// Handle nil values
 	if data == nil {
 		if a.required {
-			return zod.NewValidationError("", nil, a.getErrorMessage("required", "array is required"))
+			return zod.NewValidationError("", nil, a.getErrorMessage(zod.ValidationTypeRequired.String(), "array is required"))
 		}
 		if a.defaultValue != nil {
 			return a.Validate(a.defaultValue)
@@ -191,7 +246,7 @@ func (a *ArraySchema) Validate(data interface{}) error {
 	slice, ok := convertToSlice(data)
 	if !ok {
 		return zod.NewValidationError(fmt.Sprintf("%v", data), data,
-			a.getErrorMessage("type", "invalid type, expected array or slice"))
+			a.getErrorMessage(zod.ValidationTypeType.String(), "invalid type, expected array or slice"))
 	}
 
 	// Length validations
@@ -199,23 +254,23 @@ func (a *ArraySchema) Validate(data interface{}) error {
 
 	if a.nonEmpty && length == 0 {
 		return zod.NewValidationError("[]", slice,
-			a.getErrorMessage("nonEmpty", "array cannot be empty"))
+			a.getErrorMessage(zod.ValidationTypeNonEmpty.String(), "array cannot be empty"))
 	}
 
 	if a.minLength > 0 && length < a.minLength {
 		return zod.NewValidationError(fmt.Sprintf("length:%d", length), slice,
-			a.getErrorMessage("minLength", fmt.Sprintf("array is too short, minimum length is %d", a.minLength)))
+			a.getErrorMessage(zod.ValidationTypeMinLength.String(), fmt.Sprintf("array is too short, minimum length is %d", a.minLength)))
 	}
 
 	if a.maxLength > 0 && length > a.maxLength {
 		return zod.NewValidationError(fmt.Sprintf("length:%d", length), slice,
-			a.getErrorMessage("maxLength", fmt.Sprintf("array is too long, maximum length is %d", a.maxLength)))
+			a.getErrorMessage(zod.ValidationTypeMaxLength.String(), fmt.Sprintf("array is too long, maximum length is %d", a.maxLength)))
 	}
 
 	// Unique elements validation
 	if a.uniqueElements && !areElementsUnique(slice) {
 		return zod.NewValidationError("array", slice,
-			a.getErrorMessage("unique", "array elements must be unique"))
+			a.getErrorMessage(zod.ValidationTypeUnique.String(), "array elements must be unique"))
 	}
 
 	// Element validation
@@ -233,6 +288,11 @@ func (a *ArraySchema) Validate(data interface{}) error {
 	}
 
 	return nil
+}
+
+// Validate for UniqueArraySchema delegates to the underlying ArraySchema
+func (u *UniqueArraySchema) Validate(data interface{}) error {
+	return u.ArraySchema.Validate(data)
 }
 
 // Helper functions for common array schemas
@@ -253,7 +313,7 @@ func IntegerArray() *ArraySchema {
 }
 
 // UniqueStringArray creates an array schema for unique string elements
-func UniqueStringArray() *ArraySchema {
+func UniqueStringArray() *UniqueArraySchema {
 	return Array(String().Required()).Unique()
 }
 
