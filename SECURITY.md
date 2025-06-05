@@ -165,7 +165,7 @@ Currently, we do not have a formal bug bounty program. However, we greatly appre
 
 For security-related questions or concerns:
 
-- **Security Issues**: Use GitHub Security Advisories or email security@[maintainer-email].com
+- **Security Issues**: Use GitHub Security Advisories or email aymanepraxe@gmail.com
 - **General Security Questions**: Create a public issue with the "security" label
 - **Security Best Practices**: See our documentation and examples
 
