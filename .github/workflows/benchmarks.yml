@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: ["1.20", "1.21"]
+        go-version: ["1.21", "1.22"]
 
     steps:
       - name: Checkout code
@@ -60,8 +60,9 @@ jobs:
 
       - name: Install benchmark tools
         run: |
-          go install golang.org/x/tools/cmd/benchcmp@v0.13.0
-          go install golang.org/x/perf/cmd/benchstat@v0.0.0-20240423212842-331fbadb1fcd
+          # Use specific working versions that are compatible with Go 1.21/1.22
+          go install golang.org/x/tools/cmd/benchcmp@latest
+          go install golang.org/x/perf/cmd/benchstat@latest
 
       - name: Setup benchmark environment
         run: |
@@ -183,7 +184,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.22"
 
       - name: Generate memory profile
         run: |
@@ -208,7 +209,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.22"
 
       - name: Run performance-critical benchmarks
         run: |
