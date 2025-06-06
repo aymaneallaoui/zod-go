@@ -20,7 +20,7 @@ func BenchmarkStringSchema(b *testing.B) {
 
 func BenchmarkLargeArrayValidation(b *testing.B) {
 	elementSchema := validators.String().Min(3).Max(10)
-	arraySchema := validators.Array(elementSchema).Min(1000).Max(10000)
+	arraySchema := validators.Array(elementSchema).MinItems(1000).MinItems(10000).Optional()
 
 	largeArray := make([]interface{}, 10000)
 	for i := 0; i < 10000; i++ {
@@ -43,7 +43,7 @@ func BenchmarkNestedObjectValidation(b *testing.B) {
 			"street": validators.String().Min(5).Max(50).Required(),
 			"city":   validators.String().Min(3).Max(30).Required(),
 		}).Required(),
-	})
+	}).Optional()
 
 	userData := map[string]interface{}{
 		"name": "testo lol",

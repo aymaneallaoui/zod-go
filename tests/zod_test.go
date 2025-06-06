@@ -1,39 +1,41 @@
-package validators
+package tests
 
 import (
 	"testing"
+
+	"github.com/aymaneallaoui/zod-go/zod/validators"
 )
 
 // TestCleanPackageInterface verifies that only intended exports are visible
 func TestCleanPackageInterface(t *testing.T) {
 	t.Run("Main builders are accessible", func(t *testing.T) {
 		// These should all be accessible and return the correct types
-		_ = String()
-		_ = Number()
-		_ = Array(String())
-		_ = Object(map[string]interface{}{})
-		_ = Bool()
+		_ = validators.String()
+		_ = validators.Number()
+		_ = validators.Array(validators.String())
+		_ = validators.Object(map[string]interface{}{})
+		_ = validators.Bool()
 	})
 
 	t.Run("Convenience builders are accessible", func(t *testing.T) {
-		_ = Email()
-		_ = URL()
-		_ = OptionalString()
-		_ = RequiredString()
-		_ = PositiveNumber()
-		_ = IntegerNumber()
+		_ = validators.Email()
+		_ = validators.URL()
+		_ = validators.OptionalString()
+		_ = validators.RequiredString()
+		_ = validators.PositiveNumber()
+		_ = validators.IntegerNumber()
 	})
 
 	t.Run("Error keys are accessible", func(t *testing.T) {
 		// Method-based access
-		_ = Errors.Required()
-		_ = Errors.MinLength()
-		_ = Errors.Email()
+		_ = validators.Errors.Required()
+		_ = validators.Errors.MinLength()
+		_ = validators.Errors.Email()
 
 		// Constant access
-		_ = ErrRequired
-		_ = ErrMinLength
-		_ = ErrEmail
+		_ = validators.ErrRequired
+		_ = validators.ErrMinLength
+		_ = validators.ErrEmail
 	})
 }
 
@@ -41,37 +43,37 @@ func TestCleanPackageInterface(t *testing.T) {
 func TestTypeSafeStateManagement(t *testing.T) {
 	t.Run("String state transitions work correctly", func(t *testing.T) {
 		// Initial state can transition to required or optional
-		initial := String().Min(3).Max(50)
-		
+		initial := validators.String().Min(3).Max(50)
+
 		// Can become required
 		required := initial.Required()
 		if err := required.Validate("hello"); err != nil {
 			t.Errorf("Expected validation to pass, got: %v", err)
 		}
 
-		// Can become optional  
-		optional := String().Min(3).Max(50).Optional()
+		// Can become optional
+		optional := validators.String().Min(3).Max(50).Optional()
 		if err := optional.Validate(nil); err != nil {
 			t.Errorf("Expected nil validation to pass for optional, got: %v", err)
 		}
 	})
 
 	t.Run("Required state cannot have defaults", func(t *testing.T) {
-		required := String().Required()
-		
+		required := validators.String().Required()
+
 		// This should compile and work
 		err := required.Validate("test")
 		if err != nil {
 			t.Errorf("Expected validation to pass, got: %v", err)
 		}
-		
+
 		// Note: required.Default("value") would not compile
 		// This is tested by the type system, not runtime
 	})
 
 	t.Run("Optional state can have defaults", func(t *testing.T) {
-		optional := String().Optional().Default("default_value")
-		
+		optional := validators.String().Optional().Default("default_value")
+
 		// Nil should use default (conceptually - implementation may vary)
 		err := optional.Validate(nil)
 		if err != nil {
@@ -83,7 +85,7 @@ func TestTypeSafeStateManagement(t *testing.T) {
 // TestStringValidation tests the enhanced string validation
 func TestStringValidation(t *testing.T) {
 	t.Run("Required string validation", func(t *testing.T) {
-		schema := String().
+		schema := validators.String().
 			Min(3).WithMinLengthMessage("Too short").
 			Max(10).WithMaxLengthMessage("Too long").
 			Required().WithRequiredMessage("Required field")
@@ -113,7 +115,7 @@ func TestStringValidation(t *testing.T) {
 	})
 
 	t.Run("Optional string validation", func(t *testing.T) {
-		schema := String().
+		schema := validators.String().
 			Min(3).
 			Max(10).
 			Optional().Default("default")
@@ -133,7 +135,7 @@ func TestStringValidation(t *testing.T) {
 	})
 
 	t.Run("Email validation", func(t *testing.T) {
-		schema := Email() // Pre-configured required email
+		schema := validators.Email() // Pre-configured required email
 
 		// Valid email
 		if err := schema.Validate("test@example.com"); err != nil {
@@ -152,7 +154,7 @@ func TestStringValidation(t *testing.T) {
 	})
 
 	t.Run("URL validation", func(t *testing.T) {
-		schema := URL() // Pre-configured required URL
+		schema := validators.URL() // Pre-configured required URL
 
 		// Valid URL
 		if err := schema.Validate("https://example.com"); err != nil {
@@ -166,7 +168,7 @@ func TestStringValidation(t *testing.T) {
 	})
 
 	t.Run("Pattern validation", func(t *testing.T) {
-		schema := String().
+		schema := validators.String().
 			Pattern(`^[a-zA-Z0-9_]+$`).WithPatternMessage("Invalid characters").
 			Required()
 
@@ -185,7 +187,7 @@ func TestStringValidation(t *testing.T) {
 // TestNumberValidation tests the enhanced number validation
 func TestNumberValidation(t *testing.T) {
 	t.Run("Required number validation", func(t *testing.T) {
-		schema := Number().
+		schema := validators.Number().
 			Min(0).WithMinMessage("Cannot be negative").
 			Max(100).WithMaxMessage("Cannot exceed 100").
 			Required().WithRequiredMessage("Number required")
@@ -215,7 +217,7 @@ func TestNumberValidation(t *testing.T) {
 	})
 
 	t.Run("Optional number validation", func(t *testing.T) {
-		schema := Number().
+		schema := validators.Number().
 			Min(0).
 			Max(100).
 			Optional().Default(18.0)
@@ -232,7 +234,7 @@ func TestNumberValidation(t *testing.T) {
 	})
 
 	t.Run("Integer validation", func(t *testing.T) {
-		schema := IntegerNumber().Required() // Pre-configured integer
+		schema := validators.IntegerNumber().Required() // Pre-configured integer
 
 		// Valid integer
 		if err := schema.Validate(42); err != nil {
@@ -246,7 +248,7 @@ func TestNumberValidation(t *testing.T) {
 	})
 
 	t.Run("Positive number validation", func(t *testing.T) {
-		schema := PositiveNumber().Required() // Pre-configured positive
+		schema := validators.PositiveNumber().Required() // Pre-configured positive
 
 		// Valid positive
 		if err := schema.Validate(1); err != nil {
@@ -266,7 +268,7 @@ func TestNumberValidation(t *testing.T) {
 // TestArrayValidation tests the enhanced array validation
 func TestArrayValidation(t *testing.T) {
 	t.Run("Required array validation", func(t *testing.T) {
-		schema := Array(String().Min(1)).
+		schema := validators.Array(validators.String().Min(1)).
 			MinItems(1).WithMinItemsMessage("At least one item required").
 			MaxItems(3).WithMaxItemsMessage("Too many items").
 			Required()
@@ -297,7 +299,7 @@ func TestArrayValidation(t *testing.T) {
 
 	t.Run("Optional array validation", func(t *testing.T) {
 		defaultArray := []interface{}{"default"}
-		schema := Array(String()).
+		schema := validators.Array(validators.String()).
 			Optional().Default(defaultArray)
 
 		// Valid array
@@ -316,10 +318,10 @@ func TestArrayValidation(t *testing.T) {
 // TestObjectValidation tests the enhanced object validation
 func TestObjectValidation(t *testing.T) {
 	t.Run("Required object validation", func(t *testing.T) {
-		schema := Object(map[string]interface{}{
-			"name":  RequiredString().Min(1),
-			"email": Email(),
-			"age":   Number().Min(0).Optional(),
+		schema := validators.Object(map[string]interface{}{
+			"name":  validators.RequiredString().Min(1),
+			"email": validators.Email(),
+			"age":   validators.Number().Min(0).Optional(),
 		}).Required()
 
 		// Valid object
@@ -349,8 +351,8 @@ func TestObjectValidation(t *testing.T) {
 
 	t.Run("Optional object validation", func(t *testing.T) {
 		defaultObj := map[string]interface{}{"default": "value"}
-		schema := Object(map[string]interface{}{
-			"name": OptionalString(),
+		schema := validators.Object(map[string]interface{}{
+			"name": validators.OptionalString(),
 		}).Optional().Default(defaultObj)
 
 		// Valid object
@@ -369,7 +371,7 @@ func TestObjectValidation(t *testing.T) {
 // TestBoolValidation tests the enhanced boolean validation
 func TestBoolValidation(t *testing.T) {
 	t.Run("Required bool validation", func(t *testing.T) {
-		schema := Bool().Required().WithRequiredMessage("Boolean required")
+		schema := validators.Bool().Required().WithRequiredMessage("Boolean required")
 
 		// Valid boolean
 		if err := schema.Validate(true); err != nil {
@@ -391,7 +393,7 @@ func TestBoolValidation(t *testing.T) {
 	})
 
 	t.Run("Optional bool validation", func(t *testing.T) {
-		schema := Bool().Optional().Default(true)
+		schema := validators.Bool().Optional().Default(true)
 
 		// Valid boolean
 		if err := schema.Validate(false); err != nil {
@@ -409,36 +411,36 @@ func TestBoolValidation(t *testing.T) {
 func TestErrorKeyAutocompletion(t *testing.T) {
 	t.Run("Error key methods work", func(t *testing.T) {
 		// These should all return the expected string values
-		if Errors.Required() != "required" {
-			t.Errorf("Expected 'required', got: %s", Errors.Required())
+		if validators.Errors.Required() != "required" {
+			t.Errorf("Expected 'required', got: %s", validators.Errors.Required())
 		}
-		if Errors.MinLength() != "minLength" {
-			t.Errorf("Expected 'minLength', got: %s", Errors.MinLength())
+		if validators.Errors.MinLength() != "minLength" {
+			t.Errorf("Expected 'minLength', got: %s", validators.Errors.MinLength())
 		}
-		if Errors.Email() != "email" {
-			t.Errorf("Expected 'email', got: %s", Errors.Email())
+		if validators.Errors.Email() != "email" {
+			t.Errorf("Expected 'email', got: %s", validators.Errors.Email())
 		}
 	})
 
 	t.Run("Error key constants work", func(t *testing.T) {
 		// These should all have the expected values
-		if ErrRequired != "required" {
-			t.Errorf("Expected 'required', got: %s", ErrRequired)
+		if validators.ErrRequired != "required" {
+			t.Errorf("Expected 'required', got: %s", validators.ErrRequired)
 		}
-		if ErrMinLength != "minLength" {
-			t.Errorf("Expected 'minLength', got: %s", ErrMinLength)
+		if validators.ErrMinLength != "minLength" {
+			t.Errorf("Expected 'minLength', got: %s", validators.ErrMinLength)
 		}
-		if ErrEmail != "email" {
-			t.Errorf("Expected 'email', got: %s", ErrEmail)
+		if validators.ErrEmail != "email" {
+			t.Errorf("Expected 'email', got: %s", validators.ErrEmail)
 		}
 	})
 
 	t.Run("Custom error messages work", func(t *testing.T) {
-		schema := String().
+		schema := validators.String().
 			Min(5).
 			Required().
-			WithMessage(Errors.MinLength(), "Custom min length message").
-			WithMessage(ErrRequired, "Custom required message")
+			WithMessage(validators.Errors.MinLength(), "Custom min length message").
+			WithMessage(validators.ErrRequired, "Custom required message")
 
 		// Test that custom message is used
 		err := schema.Validate("hi") // Too short
@@ -455,22 +457,22 @@ func TestErrorKeyAutocompletion(t *testing.T) {
 // TestComplexValidationPatterns tests real-world usage patterns
 func TestComplexValidationPatterns(t *testing.T) {
 	t.Run("User registration schema", func(t *testing.T) {
-		userSchema := Object(map[string]interface{}{
-			"username": String().
+		userSchema := validators.Object(map[string]interface{}{
+			"username": validators.String().
 				Min(3).WithMinLengthMessage("Username too short").
 				Max(20).WithMaxLengthMessage("Username too long").
 				Pattern(`^[a-zA-Z0-9_]+$`).WithPatternMessage("Username contains invalid characters").
 				Required(),
-			"email": Email().WithEmailMessage("Please enter a valid email address"),
-			"password": String().
+			"email": validators.Email().WithEmailMessage("Please enter a valid email address"),
+			"password": validators.String().
 				Min(8).WithMinLengthMessage("Password must be at least 8 characters").
 				Required(),
-			"age": Number().
+			"age": validators.Number().
 				Min(13).WithMinMessage("Must be at least 13 years old").
 				Max(120).WithMaxMessage("Age must be realistic").
 				Integer().WithIntegerMessage("Age must be a whole number").
 				Optional(),
-			"terms": Bool().Required().WithRequiredMessage("Must accept terms"),
+			"terms": validators.Bool().Required().WithRequiredMessage("Must accept terms"),
 		}).Required()
 
 		// Valid user
@@ -496,15 +498,15 @@ func TestComplexValidationPatterns(t *testing.T) {
 	})
 
 	t.Run("API response schema", func(t *testing.T) {
-		responseSchema := Object(map[string]interface{}{
-			"status": String().Required(),
-			"data": Object(map[string]interface{}{
-				"users": Array(Object(map[string]interface{}{
-					"id":   Number().Required(),
-					"name": RequiredString(),
+		responseSchema := validators.Object(map[string]interface{}{
+			"status": validators.String().Required(),
+			"data": validators.Object(map[string]interface{}{
+				"users": validators.Array(validators.Object(map[string]interface{}{
+					"id":   validators.Number().Required(),
+					"name": validators.RequiredString(),
 				})).Optional(),
 			}).Optional(),
-			"errors": Array(String()).Optional(),
+			"errors": validators.Array(validators.String()).Optional(),
 		}).Required()
 
 		// Valid response
@@ -534,7 +536,7 @@ func TestComplexValidationPatterns(t *testing.T) {
 
 // BenchmarkNewAPI benchmarks the performance of the new API
 func BenchmarkNewAPI(b *testing.B) {
-	schema := String().Min(3).Max(50).Required()
+	schema := validators.String().Min(3).Max(50).Required()
 	testValue := "hello world"
 
 	b.ResetTimer()
@@ -545,11 +547,11 @@ func BenchmarkNewAPI(b *testing.B) {
 
 // BenchmarkComplexSchema benchmarks a complex validation schema
 func BenchmarkComplexSchema(b *testing.B) {
-	userSchema := Object(map[string]interface{}{
-		"name":  RequiredString().Min(1).Max(100),
-		"email": Email(),
-		"age":   Number().Min(0).Max(150).Integer().Optional(),
-		"tags":  Array(String().Min(1)).Optional(),
+	userSchema := validators.Object(map[string]interface{}{
+		"name":  validators.RequiredString().Min(1).Max(100),
+		"email": validators.Email(),
+		"age":   validators.Number().Min(0).Max(150).Integer().Optional(),
+		"tags":  validators.Array(validators.String().Min(1)).Optional(),
 	}).Required()
 
 	testUser := map[string]interface{}{

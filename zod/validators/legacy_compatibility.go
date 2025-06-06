@@ -2,20 +2,11 @@
 // This file provides backwards compatibility for existing code while encouraging migration to the new enhanced API.
 //
 // DEPRECATED: These functions are provided for backwards compatibility only.
-// New code should use the enhanced API: validators.String(), validators.Number(), etc.
-// 
-// Migration examples:
-// Old: validators.StringSchema{}.Min(3).Required()
-// New: validators.String().Min(3).Required()
 
 package validators
 
 import (
-	"fmt"
-	"net/url"
 	"regexp"
-
-	"github.com/aymaneallaoui/zod-go/zod"
 )
 
 // Legacy StringSchema - DEPRECATED
@@ -33,7 +24,7 @@ type StringSchema struct {
 	customError  map[string]string
 }
 
-// Legacy NumberSchema - DEPRECATED  
+// Legacy NumberSchema - DEPRECATED
 // Use validators.Number() instead for the enhanced API with type safety
 type NumberSchema struct {
 	minValue     *float64
@@ -83,7 +74,7 @@ func LegacyString() *StringSchema {
 	}
 }
 
-// LegacyNumber creates a legacy number schema - DEPRECATED  
+// LegacyNumber creates a legacy number schema - DEPRECATED
 // Use validators.Number() instead for enhanced DX
 func LegacyNumber() *NumberSchema {
 	return &NumberSchema{
@@ -165,7 +156,7 @@ func (s *StringSchema) WithMessage(validationType, message string) *StringSchema
 func (s *StringSchema) Validate(data interface{}) error {
 	// Use the new implementation internally for consistency
 	newSchema := String()
-	
+
 	// Copy settings to new schema
 	if s.minLength > 0 {
 		newSchema = newSchema.Min(s.minLength)
@@ -185,12 +176,12 @@ func (s *StringSchema) Validate(data interface{}) error {
 	if s.customFunc != nil {
 		newSchema = newSchema.Custom(s.customFunc)
 	}
-	
+
 	// Apply error messages
 	for key, msg := range s.customError {
 		newSchema = newSchema.WithMessage(key, msg)
 	}
-	
+
 	// Apply state
 	if s.required {
 		return newSchema.Required().Validate(data)
@@ -201,7 +192,7 @@ func (s *StringSchema) Validate(data interface{}) error {
 		}
 		return optSchema.Validate(data)
 	}
-	
+
 	// Default to required if neither is explicitly set
 	return newSchema.Required().Validate(data)
 }
@@ -213,49 +204,4 @@ func (s *StringSchema) Validate(data interface{}) error {
 func init() {
 	// This could log a warning about using legacy API, but we'll keep it quiet for now
 	// to avoid breaking existing code
-}
-
-// Migration helper function
-func MigrationGuide() string {
-	return `
-ZODE-GO MIGRATION GUIDE
-======================
-
-The zod-go library has been enhanced with a new type-safe API that provides better developer experience.
-
-OLD API (still works, but deprecated):
-  schema := &validators.StringSchema{}
-  schema.Min(3).Max(50).Required().WithMessage("minLength", "Too short")
-
-NEW API (recommended):
-  // Option 1: With error key autocompletion
-  schema := validators.String().
-    Min(3).WithMinLengthMessage("Too short").
-    Max(50).WithMaxLengthMessage("Too long").
-    Required().WithRequiredMessage("Required field")
-
-  // Option 2: With error key constants
-  schema := validators.String().
-    Min(3).WithMessage(validators.ErrMinLength, "Too short").
-    Max(50).WithMessage(validators.ErrMaxLength, "Too long").
-    Required()
-
-BENEFITS OF NEW API:
-- ✅ Type-safe state management (prevents .Required().Required())
-- ✅ Smart autocompletion for error keys
-- ✅ Clean package interface (only main functions visible)
-- ✅ Compile-time safety for method chaining
-- ✅ Better IDE support and discoverability
-
-MIGRATION STEPS:
-1. Replace struct literals with function calls:
-   &validators.StringSchema{} → validators.String()
-
-2. Update error keys to use autocompletion:
-   "minLength" → validators.Errors.MinLength() or validators.ErrMinLength
-
-3. Leverage type safety - the new API prevents invalid method chains
-
-For more information, see ENHANCED_DX.md
-`
 }

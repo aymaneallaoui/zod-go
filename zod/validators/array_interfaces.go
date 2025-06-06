@@ -19,6 +19,9 @@ type ArrayBuilder interface {
 	WithMinItemsMessage(message string) ArrayBuilder
 	WithMaxItemsMessage(message string) ArrayBuilder
 	WithContainsMessage(message string) ArrayBuilder
+
+	// Validation method - final step in the builder chain
+	//Validate(data interface{}) error
 }
 
 // RequiredArrayBuilder represents an array builder in the required state.

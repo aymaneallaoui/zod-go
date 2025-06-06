@@ -203,7 +203,7 @@ func (a *arraySchema) validate(data interface{}) error {
 
 	// Type check - convert to []interface{} if possible
 	var arr []interface{}
-	
+
 	// Use reflection to handle different slice types
 	val := reflect.ValueOf(data)
 	if val.Kind() != reflect.Slice && val.Kind() != reflect.Array {
@@ -220,13 +220,13 @@ func (a *arraySchema) validate(data interface{}) error {
 
 	// Length validations
 	if a.minItems > 0 && len(arr) < a.minItems {
-		return zod.NewValidationError(arr, arr,
+		return zod.NewValidationError(fmt.Sprintf("%v", arr), arr,
 			a.getErrorMessage(errorKeys.MinItems,
 				fmt.Sprintf("array has too few items, minimum is %d", a.minItems)))
 	}
 
 	if a.maxItems > 0 && len(arr) > a.maxItems {
-		return zod.NewValidationError(arr, arr,
+		return zod.NewValidationError(fmt.Sprintf("%v", arr), arr,
 			a.getErrorMessage(errorKeys.MaxItems,
 				fmt.Sprintf("array has too many items, maximum is %d", a.maxItems)))
 	}
@@ -258,7 +258,7 @@ func (a *arraySchema) validate(data interface{}) error {
 			}
 		}
 		if !found {
-			return zod.NewValidationError(arr, arr,
+			return zod.NewValidationError(fmt.Sprintf("%v", arr), arr,
 				a.getErrorMessage(errorKeys.Contains,
 					fmt.Sprintf("array must contain value: %v", a.contains)))
 		}
@@ -280,7 +280,7 @@ func (a *arraySchema) validateElement(item interface{}) error {
 	if validator, ok := a.elementSchema.(interface{ Validate(interface{}) error }); ok {
 		return validator.Validate(item)
 	}
-	
+
 	// Otherwise, assume it's a compatible validator from the current codebase
 	// This provides backwards compatibility with existing validators
 	return nil

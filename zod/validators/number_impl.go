@@ -290,31 +290,31 @@ func (n *numberSchema) validate(data interface{}) error {
 
 	// Integer validation
 	if n.integerOnly && num != math.Trunc(num) {
-		return zod.NewValidationError(num, num,
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num,
 			n.getErrorMessage(errorKeys.Integer, "value must be an integer"))
 	}
 
 	// Range validations
 	if n.minValue != nil && num < *n.minValue {
-		return zod.NewValidationError(num, num,
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num,
 			n.getErrorMessage(errorKeys.Min,
 				fmt.Sprintf("value is too small, minimum is %g", *n.minValue)))
 	}
 
 	if n.maxValue != nil && num > *n.maxValue {
-		return zod.NewValidationError(num, num,
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num,
 			n.getErrorMessage(errorKeys.Max,
 				fmt.Sprintf("value is too large, maximum is %g", *n.maxValue)))
 	}
 
 	// Sign validations
 	if n.positiveOnly && num <= 0 {
-		return zod.NewValidationError(num, num,
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num,
 			n.getErrorMessage(errorKeys.Positive, "value must be positive"))
 	}
 
 	if n.negativeOnly && num >= 0 {
-		return zod.NewValidationError(num, num,
+		return zod.NewValidationError(fmt.Sprintf("%v", num), num,
 			n.getErrorMessage(errorKeys.Negative, "value must be negative"))
 	}
 
