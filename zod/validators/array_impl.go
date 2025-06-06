@@ -293,31 +293,41 @@ func (a *arraySchema) validateElement(item interface{}) error {
 		return validator.Validate(item)
 	}
 
-	// Handle unfinalized schemas by type
+	// Handle unfinalized schemas by type - automatically treat them as required
 	switch schema := a.elementSchema.(type) {
 	case *stringSchema:
 		// Create a required string validator from the unfinalized schema
 		requiredSchema := &requiredStringSchema{schema}
+		requiredSchema.stringSchema.required = true
+		requiredSchema.stringSchema.optional = false
 		return requiredSchema.Validate(item)
 		
 	case *numberSchema:
 		// Create a required number validator from the unfinalized schema
 		requiredSchema := &requiredNumberSchema{schema}
+		requiredSchema.numberSchema.required = true
+		requiredSchema.numberSchema.optional = false
 		return requiredSchema.Validate(item)
 		
 	case *objectSchema:
 		// Create a required object validator from the unfinalized schema
 		requiredSchema := &requiredObjectSchema{schema}
+		requiredSchema.objectSchema.required = true
+		requiredSchema.objectSchema.optional = false
 		return requiredSchema.Validate(item)
 		
 	case *boolSchema:
 		// Create a required bool validator from the unfinalized schema  
 		requiredSchema := &requiredBoolSchema{schema}
+		requiredSchema.boolSchema.required = true
+		requiredSchema.boolSchema.optional = false
 		return requiredSchema.Validate(item)
 		
 	case *arraySchema:
 		// Create a required array validator from the unfinalized schema
 		requiredSchema := &requiredArraySchema{schema}
+		requiredSchema.arraySchema.required = true
+		requiredSchema.arraySchema.optional = false
 		return requiredSchema.Validate(item)
 	}
 
