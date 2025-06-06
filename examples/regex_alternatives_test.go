@@ -63,7 +63,7 @@ func TestRegexPatternFixes(t *testing.T) {
 
 		// Test invalid passwords
 		invalidPasswords := []string{
-			"password",   // No uppercase, digits, or special chars
+			"password",    // No uppercase, digits, or special chars
 			"PASSWORD1!", // No lowercase
 			"Password!",  // No digits
 			"Password1",  // No special chars
@@ -89,8 +89,8 @@ func TestRegexPatternFixes(t *testing.T) {
 		}
 
 		schema := validators.String().
-			Email().                 // Basic email validation
-			Custom(domainValidator). // Additional domain check
+			Email().                    // Basic email validation
+			Custom(domainValidator).    // Additional domain check
 			Required()
 
 		// Test valid emails
@@ -235,7 +235,6 @@ func StrongPasswordValidator(password string) error {
 		{`\d`, "password must contain at least one digit"},
 		{`[@$!%*?&]`, "password must contain at least one special character (@$!%%*?&)"},
 	}
-
 	for _, check := range checks {
 		if matched, _ := regexp.MatchString(check.pattern, password); !matched {
 			return fmt.Errorf(check.message)
@@ -251,7 +250,7 @@ func ExampleStrongPasswordValidation() {
 	passwordSchema := validators.String().
 		Min(8).
 		Max(128).
-		Custom(StrongPasswordValidator).
+		Custom(StrongPasswordValidator).  // Fixed: changed from StrongPasswordValidation to StrongPasswordValidator
 		Required()
 
 	// Test it
