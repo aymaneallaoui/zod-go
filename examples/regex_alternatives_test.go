@@ -245,8 +245,8 @@ func StrongPasswordValidator(password string) error {
 	return nil
 }
 
-// Usage example function (not a test)
-func ExamplePasswordValidation() {
+// ExampleStrongPasswordValidation demonstrates password validation usage
+func ExampleStrongPasswordValidation() {
 	// Create a strong password schema
 	passwordSchema := validators.String().
 		Min(8).
