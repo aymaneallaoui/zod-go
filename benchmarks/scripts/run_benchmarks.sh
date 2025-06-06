@@ -14,8 +14,27 @@ NC='\033[0m' # No Color
 
 # Configuration
 BENCHMARKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RESULTS_DIR="${BENCHMARKS_DIR}/results"
+RESULTS_DIR=$(wslpath -a "${BENCHMARKS_DIR}/results" | sed 's/ /\\ /g')
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
+if grep -qi microsoft /proc/version; then
+    # Convert Windows path to WSL path properly
+    RESULTS_DIR=$(wslpath -aw "${BENCHMARKS_DIR}/results")
+    # Function to convert Windows paths for profile outputs
+    convert_path() {
+        echo "$(wslpath -w "$1" | sed 's/\\/\\\\/g')"
+    }
+else
+    RESULTS_DIR="${BENCHMARKS_DIR}/results"
+    # For non-WSL systems, keep paths as-is
+    convert_path() {
+        echo "$1"
+    }
+fi
+
+
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
 
 # Create results directory if it doesn't exist
 mkdir -p "${RESULTS_DIR}"
@@ -151,7 +170,7 @@ done
 
 # Quick mode patterns
 if [[ "$QUICK_MODE" == true ]]; then
-    BENCHMARK_PATTERN="BenchmarkNewVsOldAPI/NewAPI_String_Simple|BenchmarkNewVsOldAPI/NewAPI_Number_Validation"
+    BENCHMARK_PATTERN="'BenchmarkNewVsOldAPI/NewAPI_String_Simple|BenchmarkNewVsOldAPI/NewAPI_Number_Validation'"
     COUNT=1
     echo -e "${YELLOW}📋 Running quick benchmarks...${NC}"
 fi
@@ -172,15 +191,17 @@ if [[ "$COUNT" -gt 1 ]]; then
 fi
 
 if [[ "$CPU_PROFILE" == true ]]; then
-    BENCH_CMD="${BENCH_CMD} -cpuprofile=${RESULTS_DIR}/cpu_${TIMESTAMP}.prof"
+    CPU_PROFILE_PATH="${RESULTS_DIR}/cpu_${TIMESTAMP}.prof"
+    # Escape spaces in the path
+    CPU_PROFILE_PATH=$(echo "$CPU_PROFILE_PATH" | sed 's/ /\\ /g')
+    BENCH_CMD="${BENCH_CMD} -cpuprofile=\"${CPU_PROFILE_PATH}\""
 fi
 
 if [[ "$MEM_PROFILE" == true ]]; then
-    BENCH_CMD="${BENCH_CMD} -memprofile=${RESULTS_DIR}/mem_${TIMESTAMP}.prof"
-fi
-
-if [[ "$VERBOSE" == true ]]; then
-    BENCH_CMD="${BENCH_CMD} -v"
+    MEM_PROFILE_PATH="${RESULTS_DIR}/mem_${TIMESTAMP}.prof"
+    # Escape spaces in the path
+    MEM_PROFILE_PATH=$(echo "$MEM_PROFILE_PATH" | sed 's/ /\\ /g')
+    BENCH_CMD="${BENCH_CMD} -memprofile=\"${MEM_PROFILE_PATH}\""
 fi
 
 echo -e "${GREEN}📊 Running benchmarks...${NC}"

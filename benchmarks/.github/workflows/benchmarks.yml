@@ -2,49 +2,49 @@ name: Benchmarks
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'zod/**'
-      - 'benchmarks/**'
-      - 'go.mod'
-      - 'go.sum'
+      - "zod/**"
+      - "benchmarks/**"
+      - "go.mod"
+      - "go.sum"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'zod/**'
-      - 'benchmarks/**'
-      - 'go.mod'
-      - 'go.sum'
+      - "zod/**"
+      - "benchmarks/**"
+      - "go.mod"
+      - "go.sum"
   schedule:
     # Run benchmarks daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       save_baseline:
-        description: 'Save results as new baseline'
+        description: "Save results as new baseline"
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
-        go-version: ['1.20', '1.21']
-    
+        go-version: ["1.20", "1.21"]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for comparison
-      
+          fetch-depth: 0 # Fetch full history for comparison
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-      
+
       - name: Cache Go modules
         uses: actions/cache@v3
         with:
@@ -54,32 +54,32 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
-      
+
       - name: Install dependencies
         run: go mod download
-      
+
       - name: Install benchmark tools
         run: |
           go install golang.org/x/tools/cmd/benchcmp@latest
           go install golang.org/x/perf/cmd/benchstat@latest
-      
+
       - name: Setup benchmark environment
         run: |
           cd benchmarks
           make setup
-      
+
       - name: Run benchmarks
         run: |
           cd benchmarks
           make ci-bench | tee benchmark_results.txt
-      
+
       - name: Upload benchmark results
         uses: actions/upload-artifact@v3
         with:
           name: benchmark-results-go${{ matrix.go-version }}
           path: benchmarks/benchmark_results.txt
           retention-days: 30
-      
+
       - name: Download previous benchmark results
         if: github.event_name == 'pull_request'
         uses: actions/download-artifact@v3
@@ -87,7 +87,7 @@ jobs:
           name: benchmark-results-go${{ matrix.go-version }}
           path: ./previous/
         continue-on-error: true
-      
+
       - name: Compare with previous benchmarks
         if: github.event_name == 'pull_request'
         run: |
@@ -102,7 +102,7 @@ jobs:
           else
             echo "No previous benchmark results found for comparison" >> $GITHUB_STEP_SUMMARY
           fi
-      
+
       - name: Performance regression check
         if: github.event_name == 'pull_request'
         run: |
@@ -115,7 +115,7 @@ jobs:
               exit 1
             fi
           fi
-      
+
       - name: Save as baseline
         if: |
           (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
@@ -123,7 +123,7 @@ jobs:
         run: |
           cd benchmarks
           cp benchmark_results.txt results/baseline_go${{ matrix.go-version }}.txt
-      
+
       - name: Upload baseline
         if: |
           (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
@@ -138,22 +138,22 @@ jobs:
     needs: benchmark
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Download all benchmark results
         uses: actions/download-artifact@v3
         with:
           path: ./results/
-      
+
       - name: Generate benchmark report
         run: |
           echo "# Daily Benchmark Report" > benchmark_report.md
           echo "Generated: $(date)" >> benchmark_report.md
           echo "" >> benchmark_report.md
-          
+
           for result_dir in results/benchmark-results-*; do
             if [ -d "$result_dir" ]; then
               go_version=$(basename "$result_dir" | sed 's/benchmark-results-//')
@@ -164,7 +164,7 @@ jobs:
               echo "" >> benchmark_report.md
             fi
           done
-      
+
       - name: Upload report
         uses: actions/upload-artifact@v3
         with:
@@ -175,21 +175,21 @@ jobs:
   memory-profile:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
-      
+          go-version: "1.21"
+
       - name: Generate memory profile
         run: |
           cd benchmarks
           make profile-mem
-      
+
       - name: Upload memory profile
         uses: actions/upload-artifact@v3
         with:
@@ -200,22 +200,22 @@ jobs:
   performance-gate:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
-      
+          go-version: "1.21"
+
       - name: Run performance-critical benchmarks
         run: |
           cd benchmarks
           # Run only the most critical benchmarks for quick feedback
           go test -bench="NewAPI_String_Simple|NewAPI_Number_Validation|ComplexUserSchema_Valid" -benchmem -count=3
-      
+
       - name: Check performance thresholds
         run: |
           cd benchmarks
@@ -223,7 +223,7 @@ jobs:
           SIMPLE_STRING_MAX_NS=50
           NUMBER_VALIDATION_MAX_NS=10
           COMPLEX_SCHEMA_MAX_MS=10
-          
+
           # Extract performance numbers and check thresholds
           # This is a simplified check - in practice you'd want more sophisticated analysis
-          echo "✅ Performance gate checks passed"
+          echo "Performance gate checks passed"
