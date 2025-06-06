@@ -288,12 +288,40 @@ func (a *arraySchema) validate(data interface{}) error {
 
 // validateElement validates a single array element against the element schema
 func (a *arraySchema) validateElement(item interface{}) error {
-	// Try the standard Validate method first
+	// First, try the standard Validate method (for finalized schemas)
 	if validator, ok := a.elementSchema.(interface{ Validate(interface{}) error }); ok {
 		return validator.Validate(item)
 	}
 
-	// Try to handle different types of validators that might be passed
+	// Handle unfinalized schemas by type
+	switch schema := a.elementSchema.(type) {
+	case *stringSchema:
+		// Create a required string validator from the unfinalized schema
+		requiredSchema := &requiredStringSchema{schema}
+		return requiredSchema.Validate(item)
+		
+	case *numberSchema:
+		// Create a required number validator from the unfinalized schema
+		requiredSchema := &requiredNumberSchema{schema}
+		return requiredSchema.Validate(item)
+		
+	case *objectSchema:
+		// Create a required object validator from the unfinalized schema
+		requiredSchema := &requiredObjectSchema{schema}
+		return requiredSchema.Validate(item)
+		
+	case *boolSchema:
+		// Create a required bool validator from the unfinalized schema  
+		requiredSchema := &requiredBoolSchema{schema}
+		return requiredSchema.Validate(item)
+		
+	case *arraySchema:
+		// Create a required array validator from the unfinalized schema
+		requiredSchema := &requiredArraySchema{schema}
+		return requiredSchema.Validate(item)
+	}
+
+	// Try reflection as a fallback for other types
 	val := reflect.ValueOf(a.elementSchema)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
