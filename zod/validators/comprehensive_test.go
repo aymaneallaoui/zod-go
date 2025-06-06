@@ -336,8 +336,8 @@ func TestComplexDataTypes(t *testing.T) {
 					}).Required(),
 				}).Required(),
 				"preferences": Object(map[string]interface{}{
-					"theme":     String().Optional().Default("light"),
-					"language":  String().Optional().Default("en"),
+					"theme":         String().Optional().Default("light"),
+					"language":      String().Optional().Default("en"),
 					"notifications": Bool().Optional().Default(true),
 				}).Optional(),
 			}).Required(),
@@ -711,7 +711,18 @@ func TestMemoryAndPerformance(t *testing.T) {
 
 		// Validate with each schema
 		for i, schema := range schemas {
-			testValue := fmt.Sprintf("test_value_%d_test", i)
+			// Fixed: Create test values that respect the length constraints
+			minLen := i % 10
+			maxLen := (i % 50) + 10
+			// Create a string that fits within the constraints
+			testValue := fmt.Sprintf("test_%d", i)
+			if len(testValue) < minLen {
+				testValue += strings.Repeat("x", minLen-len(testValue))
+			}
+			if len(testValue) > maxLen {
+				testValue = testValue[:maxLen]
+			}
+			
 			if err := schema.Validate(testValue); err != nil {
 				t.Errorf("Schema %d validation failed: %v", i, err)
 			}
@@ -732,7 +743,7 @@ func TestErrorHandling(t *testing.T) {
 		invalidData := map[string]interface{}{
 			"name":  "Jo",           // Too short
 			"email": "invalid-email", // Invalid format
-			"age":   "not_a_number", // Wrong type
+			"age":   "not_a_number",  // Wrong type
 		}
 
 		err := schema.Validate(invalidData)
@@ -837,7 +848,7 @@ func TestCompatibility(t *testing.T) {
 		// Convert struct to map using reflection
 		structValue := reflect.ValueOf(testStruct)
 		structType := structValue.Type()
-		
+
 		dataMap := make(map[string]interface{})
 		for i := 0; i < structValue.NumField(); i++ {
 			field := structType.Field(i)
@@ -892,7 +903,7 @@ func TestCustomValidators(t *testing.T) {
 
 		// Valid content
 		if err := schema.Validate("This is good content"); err != nil {
-			t.Errorf("Expected clean content to pass, got: %v", err)
+			t.Error("Expected clean content to pass, got:", err)
 		}
 
 		// Invalid content
