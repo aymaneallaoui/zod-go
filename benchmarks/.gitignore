@@ -1,0 +1,45 @@
+# Benchmark Results
+results/
+*.txt
+*.prof
+*.log
+
+# Temporary files
+tmp_*
+temp_*
+.tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go test binary
+*.test
+
+# Coverage files
+coverage.out
+*.cover
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Benchmark comparison outputs
+benchmark_diff_*
+comparison_*
+
+# Profile analysis outputs
+*.svg
+*.pdf
+*.png
+
+# Lock files (if any tools generate them)
+*.lock
