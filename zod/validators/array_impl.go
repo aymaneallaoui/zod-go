@@ -10,15 +10,15 @@ import (
 // Core array schema struct (unexported)
 // This contains all the validation configuration and is wrapped by state-specific types
 type arraySchema struct {
-	elementSchema interface{}
-	minItems      int
-	maxItems      int
-	contains      interface{}
-	customFunc    func([]interface{}) error
-	required      bool
-	optional      bool
-	defaultValue  []interface{}
-	customError   map[string]string
+	elementSchema   interface{}
+	minItems        int
+	maxItems        int
+	contains        interface{}
+	customFunc      func([]interface{}) error
+	required        bool
+	optional        bool
+	defaultValue    []interface{}
+	customError     map[string]string
 }
 
 // State wrapper types for compile-time safety
@@ -68,6 +68,9 @@ func (a *arraySchema) Optional() OptionalArrayBuilder {
 
 // Error message methods for ArrayBuilder
 func (a *arraySchema) WithMessage(validationType, message string) ArrayBuilder {
+	if a.customError == nil {
+		a.customError = make(map[string]string)
+	}
 	a.customError[validationType] = message
 	return a
 }
@@ -109,6 +112,9 @@ func (r *requiredArraySchema) Custom(fn func([]interface{}) error) RequiredArray
 
 // Error message methods for RequiredArrayBuilder
 func (r *requiredArraySchema) WithMessage(validationType, message string) RequiredArrayBuilder {
+	if r.arraySchema.customError == nil {
+		r.arraySchema.customError = make(map[string]string)
+	}
 	r.arraySchema.customError[validationType] = message
 	return r
 }
@@ -160,6 +166,9 @@ func (o *optionalArraySchema) Default(value []interface{}) OptionalArrayBuilder 
 
 // Error message methods for OptionalArrayBuilder
 func (o *optionalArraySchema) WithMessage(validationType, message string) OptionalArrayBuilder {
+	if o.arraySchema.customError == nil {
+		o.arraySchema.customError = make(map[string]string)
+	}
 	o.arraySchema.customError[validationType] = message
 	return o
 }
@@ -237,7 +246,10 @@ func (a *arraySchema) validate(data interface{}) error {
 		for i, item := range arr {
 			if err := a.validateElement(item); err != nil {
 				if validationErr, ok := err.(*zod.ValidationError); ok {
-					details = append(details, *validationErr)
+					// Add index information to the error
+					indexedErr := *validationErr
+					indexedErr.Field = fmt.Sprintf("[%d]", i)
+					details = append(details, indexedErr)
 				} else {
 					details = append(details, *zod.NewValidationError(fmt.Sprintf("[%d]", i), item, err.Error()))
 				}
@@ -276,20 +288,40 @@ func (a *arraySchema) validate(data interface{}) error {
 
 // validateElement validates a single array element against the element schema
 func (a *arraySchema) validateElement(item interface{}) error {
-	// If elementSchema has a Validate method, use it
+	// Try the standard Validate method first
 	if validator, ok := a.elementSchema.(interface{ Validate(interface{}) error }); ok {
 		return validator.Validate(item)
 	}
 
-	// Otherwise, assume it's a compatible validator from the current codebase
-	// This provides backwards compatibility with existing validators
-	return nil
+	// Try to handle different types of validators that might be passed
+	val := reflect.ValueOf(a.elementSchema)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	// Look for a Validate method using reflection
+	validateMethod := val.MethodByName("Validate")
+	if validateMethod.IsValid() {
+		// Call the Validate method
+		results := validateMethod.Call([]reflect.Value{reflect.ValueOf(item)})
+		if len(results) > 0 {
+			if err, ok := results[0].Interface().(error); ok {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// If we can't find a way to validate, that's an error in the schema definition
+	return fmt.Errorf("element schema does not implement validation interface: %T", a.elementSchema)
 }
 
 // Helper methods (unexported)
 func (a *arraySchema) getErrorMessage(validationType, defaultMessage string) string {
-	if msg, exists := a.customError[validationType]; exists {
-		return msg
+	if a.customError != nil {
+		if msg, exists := a.customError[validationType]; exists {
+			return msg
+		}
 	}
 	return defaultMessage
 }
