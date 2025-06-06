@@ -1,4 +1,4 @@
-package validators
+package benchmarks
 
 import (
 	"fmt"
