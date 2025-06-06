@@ -9,13 +9,12 @@ import (
 	"github.com/aymaneallaoui/zod-go/zod/validators"
 )
 
-// TestRegexPatternFixes demonstrates how to replace unsupported regex patterns
 func TestRegexPatternFixes(t *testing.T) {
 	t.Run("Password Validation Without Lookaheads", func(t *testing.T) {
-		// ❌ This pattern uses lookaheads which Go doesn't support:
+		// This pattern uses lookaheads which Go doesn't support:
 		// "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]"
 
-		// ✅ Instead, use custom validation function:
+		//  Instead, use custom validation function:
 		passwordValidator := func(password string) error {
 			if len(password) < 8 {
 				return fmt.Errorf("password must be at least 8 characters long")
@@ -42,13 +41,11 @@ func TestRegexPatternFixes(t *testing.T) {
 			return nil
 		}
 
-		// Create schema using custom validation instead of regex pattern
 		schema := validators.String().
 			Min(8).
 			Custom(passwordValidator).
 			Required()
 
-		// Test valid passwords
 		validPasswords := []string{
 			"Password1!",
 			"MyStr0ng@Pass",
@@ -61,9 +58,8 @@ func TestRegexPatternFixes(t *testing.T) {
 			}
 		}
 
-		// Test invalid passwords
 		invalidPasswords := []string{
-			"password",    // No uppercase, digits, or special chars
+			"password",   // No uppercase, digits, or special chars
 			"PASSWORD1!", // No lowercase
 			"Password!",  // No digits
 			"Password1",  // No special chars
@@ -78,9 +74,6 @@ func TestRegexPatternFixes(t *testing.T) {
 	})
 
 	t.Run("Email Domain Validation", func(t *testing.T) {
-		// ❌ Lookahead pattern: "^(?=.*@.*\\.com$).*@.*\\.com$"
-
-		// ✅ Use simple pattern + custom validation:
 		domainValidator := func(email string) error {
 			if !strings.HasSuffix(email, ".com") {
 				return fmt.Errorf("email must have .com domain")
@@ -89,25 +82,20 @@ func TestRegexPatternFixes(t *testing.T) {
 		}
 
 		schema := validators.String().
-			Email().                    // Basic email validation
-			Custom(domainValidator).    // Additional domain check
+			Email().
+			Custom(domainValidator).
 			Required()
 
-		// Test valid emails
 		if err := schema.Validate("user@example.com"); err != nil {
 			t.Errorf("Expected valid .com email to pass, got: %v", err)
 		}
 
-		// Test invalid emails
 		if err := schema.Validate("user@example.org"); err == nil {
 			t.Error("Expected non-.com email to fail")
 		}
 	})
 
 	t.Run("Multiple Condition Validation", func(t *testing.T) {
-		// ❌ Complex lookahead: "^(?=.*foo)(?=.*bar)(?!.*baz).*$"
-
-		// ✅ Use custom validation:
 		multiValidator := func(text string) error {
 			if !strings.Contains(text, "foo") {
 				return fmt.Errorf("text must contain 'foo'")
@@ -125,12 +113,10 @@ func TestRegexPatternFixes(t *testing.T) {
 			Custom(multiValidator).
 			Required()
 
-		// Test valid text
 		if err := schema.Validate("foo and bar are here"); err != nil {
 			t.Errorf("Expected valid text to pass, got: %v", err)
 		}
 
-		// Test invalid text
 		if err := schema.Validate("foo and bar and baz"); err == nil {
 			t.Error("Expected text with 'baz' to fail")
 		}
@@ -172,7 +158,6 @@ func TestRegexPatternFixes(t *testing.T) {
 				name:        "Phone number format",
 				description: "Must be valid phone format",
 				validator: func(s string) error {
-					// Remove common separators for validation
 					cleaned := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(s, "-", ""), " ", ""), "(", "")
 					cleaned = strings.ReplaceAll(strings.ReplaceAll(cleaned, ")", ""), "+", "")
 
@@ -202,14 +187,12 @@ func TestRegexPatternFixes(t *testing.T) {
 			t.Run(test.name, func(t *testing.T) {
 				schema := validators.String().Custom(test.validator).Required()
 
-				// Test valid cases
 				for _, valid := range test.valid {
 					if err := schema.Validate(valid); err != nil {
 						t.Errorf("Expected '%s' to be valid for %s, got: %v", valid, test.description, err)
 					}
 				}
 
-				// Test invalid cases
 				for _, invalid := range test.invalid {
 					if err := schema.Validate(invalid); err == nil {
 						t.Errorf("Expected '%s' to be invalid for %s", invalid, test.description)
@@ -220,7 +203,6 @@ func TestRegexPatternFixes(t *testing.T) {
 	})
 }
 
-// Example of a reusable password validation function
 func StrongPasswordValidator(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("password must be at least 8 characters long")
@@ -244,16 +226,13 @@ func StrongPasswordValidator(password string) error {
 	return nil
 }
 
-// ExampleStrongPasswordValidation demonstrates password validation usage
-func ExampleStrongPasswordValidation() {
-	// Create a strong password schema
+func StrongPasswordValidation() {
 	passwordSchema := validators.String().
 		Min(8).
 		Max(128).
-		Custom(StrongPasswordValidator).  // Fixed: changed from StrongPasswordValidation to StrongPasswordValidator
+		Custom(StrongPasswordValidator).
 		Required()
 
-	// Test it
 	passwords := []string{
 		"Password123!", // Valid
 		"weakpass",     // Invalid - missing uppercase, digit, special char

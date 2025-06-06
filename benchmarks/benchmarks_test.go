@@ -52,7 +52,6 @@ func BenchmarkNewVsOldAPI(b *testing.B) {
 
 // BenchmarkComplexSchemas tests performance with realistic complex schemas
 func BenchmarkComplexSchemas(b *testing.B) {
-	// User registration schema
 	userSchema := validators.Object(map[string]interface{}{
 		"username": validators.String().
 			Min(3).Max(20).
@@ -184,7 +183,7 @@ func BenchmarkStateTransitions(b *testing.B) {
 
 // BenchmarkErrorKeyPerformance tests different error key approaches
 func BenchmarkErrorKeyPerformance(b *testing.B) {
-	testValue := "hi" // Too short
+	testValue := "hi"
 
 	b.Run("ErrorKeys_Method_Based", func(b *testing.B) {
 		schema := validators.String().Min(5).Required().

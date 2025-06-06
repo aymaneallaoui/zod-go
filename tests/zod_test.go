@@ -9,7 +9,6 @@ import (
 // TestCleanPackageInterface verifies that only intended exports are visible
 func TestCleanPackageInterface(t *testing.T) {
 	t.Run("Main builders are accessible", func(t *testing.T) {
-		// These should all be accessible and return the correct types
 		_ = validators.String()
 		_ = validators.Number()
 		_ = validators.Array(validators.String())
@@ -27,12 +26,10 @@ func TestCleanPackageInterface(t *testing.T) {
 	})
 
 	t.Run("Error keys are accessible", func(t *testing.T) {
-		// Method-based access
 		_ = validators.Errors.Required()
 		_ = validators.Errors.MinLength()
 		_ = validators.Errors.Email()
 
-		// Constant access
 		_ = validators.ErrRequired
 		_ = validators.ErrMinLength
 		_ = validators.ErrEmail
@@ -42,16 +39,13 @@ func TestCleanPackageInterface(t *testing.T) {
 // TestTypeSafeStateManagement verifies compile-time safety
 func TestTypeSafeStateManagement(t *testing.T) {
 	t.Run("String state transitions work correctly", func(t *testing.T) {
-		// Initial state can transition to required or optional
 		initial := validators.String().Min(3).Max(50)
 
-		// Can become required
 		required := initial.Required()
 		if err := required.Validate("hello"); err != nil {
 			t.Errorf("Expected validation to pass, got: %v", err)
 		}
 
-		// Can become optional
 		optional := validators.String().Min(3).Max(50).Optional()
 		if err := optional.Validate(nil); err != nil {
 			t.Errorf("Expected nil validation to pass for optional, got: %v", err)
@@ -61,7 +55,6 @@ func TestTypeSafeStateManagement(t *testing.T) {
 	t.Run("Required state cannot have defaults", func(t *testing.T) {
 		required := validators.String().Required()
 
-		// This should compile and work
 		err := required.Validate("test")
 		if err != nil {
 			t.Errorf("Expected validation to pass, got: %v", err)
@@ -74,7 +67,6 @@ func TestTypeSafeStateManagement(t *testing.T) {
 	t.Run("Optional state can have defaults", func(t *testing.T) {
 		optional := validators.String().Optional().Default("default_value")
 
-		// Nil should use default (conceptually - implementation may vary)
 		err := optional.Validate(nil)
 		if err != nil {
 			t.Errorf("Expected nil validation to pass with default, got: %v", err)
@@ -90,22 +82,18 @@ func TestStringValidation(t *testing.T) {
 			Max(10).WithMaxLengthMessage("Too long").
 			Required().WithRequiredMessage("Required field")
 
-		// Valid input
 		if err := schema.Validate("hello"); err != nil {
 			t.Errorf("Expected valid input to pass, got: %v", err)
 		}
 
-		// Too short
 		if err := schema.Validate("hi"); err == nil {
 			t.Error("Expected short input to fail")
 		}
 
-		// Too long
 		if err := schema.Validate("this_is_too_long"); err == nil {
 			t.Error("Expected long input to fail")
 		}
 
-		// Empty/nil should fail for required
 		if err := schema.Validate(""); err == nil {
 			t.Error("Expected empty input to fail for required")
 		}
@@ -120,12 +108,10 @@ func TestStringValidation(t *testing.T) {
 			Max(10).
 			Optional().Default("default")
 
-		// Valid input
 		if err := schema.Validate("hello"); err != nil {
 			t.Errorf("Expected valid input to pass, got: %v", err)
 		}
 
-		// Empty/nil should pass for optional
 		if err := schema.Validate(""); err != nil {
 			t.Errorf("Expected empty input to pass for optional, got: %v", err)
 		}
@@ -137,17 +123,14 @@ func TestStringValidation(t *testing.T) {
 	t.Run("Email validation", func(t *testing.T) {
 		schema := validators.Email() // Pre-configured required email
 
-		// Valid email
 		if err := schema.Validate("test@example.com"); err != nil {
 			t.Errorf("Expected valid email to pass, got: %v", err)
 		}
 
-		// Invalid email
 		if err := schema.Validate("invalid-email"); err == nil {
 			t.Error("Expected invalid email to fail")
 		}
 
-		// Empty should fail (required)
 		if err := schema.Validate(""); err == nil {
 			t.Error("Expected empty email to fail")
 		}
@@ -192,7 +175,6 @@ func TestNumberValidation(t *testing.T) {
 			Max(100).WithMaxMessage("Cannot exceed 100").
 			Required().WithRequiredMessage("Number required")
 
-		// Valid number
 		if err := schema.Validate(50); err != nil {
 			t.Errorf("Expected valid number to pass, got: %v", err)
 		}
@@ -200,17 +182,14 @@ func TestNumberValidation(t *testing.T) {
 			t.Errorf("Expected valid float to pass, got: %v", err)
 		}
 
-		// Too small
 		if err := schema.Validate(-1); err == nil {
 			t.Error("Expected negative number to fail")
 		}
 
-		// Too large
 		if err := schema.Validate(101); err == nil {
 			t.Error("Expected large number to fail")
 		}
 
-		// Nil should fail for required
 		if err := schema.Validate(nil); err == nil {
 			t.Error("Expected nil to fail for required")
 		}
@@ -273,13 +252,11 @@ func TestArrayValidation(t *testing.T) {
 			MaxItems(3).WithMaxItemsMessage("Too many items").
 			Required()
 
-		// Valid array
 		validArray := []string{"item1", "item2"}
 		if err := schema.Validate(validArray); err != nil {
 			t.Errorf("Expected valid array to pass, got: %v", err)
 		}
 
-		// Empty array should fail min items
 		emptyArray := []string{}
 		if err := schema.Validate(emptyArray); err == nil {
 			t.Error("Expected empty array to fail min items")
@@ -291,7 +268,6 @@ func TestArrayValidation(t *testing.T) {
 			t.Error("Expected large array to fail max items")
 		}
 
-		// Nil should fail for required
 		if err := schema.Validate(nil); err == nil {
 			t.Error("Expected nil to fail for required array")
 		}
@@ -324,7 +300,6 @@ func TestObjectValidation(t *testing.T) {
 			"age":   validators.Number().Min(0).Optional(),
 		}).Required()
 
-		// Valid object
 		validObj := map[string]interface{}{
 			"name":  "John",
 			"email": "john@example.com",
@@ -334,7 +309,6 @@ func TestObjectValidation(t *testing.T) {
 			t.Errorf("Expected valid object to pass, got: %v", err)
 		}
 
-		// Missing required field
 		invalidObj := map[string]interface{}{
 			"email": "john@example.com",
 			// missing name
@@ -373,7 +347,6 @@ func TestBoolValidation(t *testing.T) {
 	t.Run("Required bool validation", func(t *testing.T) {
 		schema := validators.Bool().Required().WithRequiredMessage("Boolean required")
 
-		// Valid boolean
 		if err := schema.Validate(true); err != nil {
 			t.Errorf("Expected true to pass, got: %v", err)
 		}
@@ -381,12 +354,10 @@ func TestBoolValidation(t *testing.T) {
 			t.Errorf("Expected false to pass, got: %v", err)
 		}
 
-		// Invalid type
 		if err := schema.Validate("not a bool"); err == nil {
 			t.Error("Expected non-boolean to fail")
 		}
 
-		// Nil should fail for required
 		if err := schema.Validate(nil); err == nil {
 			t.Error("Expected nil to fail for required boolean")
 		}
@@ -410,7 +381,6 @@ func TestBoolValidation(t *testing.T) {
 // TestErrorKeyAutocompletion tests the error key system
 func TestErrorKeyAutocompletion(t *testing.T) {
 	t.Run("Error key methods work", func(t *testing.T) {
-		// These should all return the expected string values
 		if validators.Errors.Required() != "required" {
 			t.Errorf("Expected 'required', got: %s", validators.Errors.Required())
 		}
@@ -423,7 +393,6 @@ func TestErrorKeyAutocompletion(t *testing.T) {
 	})
 
 	t.Run("Error key constants work", func(t *testing.T) {
-		// These should all have the expected values
 		if validators.ErrRequired != "required" {
 			t.Errorf("Expected 'required', got: %s", validators.ErrRequired)
 		}
@@ -442,13 +411,11 @@ func TestErrorKeyAutocompletion(t *testing.T) {
 			WithMessage(validators.Errors.MinLength(), "Custom min length message").
 			WithMessage(validators.ErrRequired, "Custom required message")
 
-		// Test that custom message is used
 		err := schema.Validate("hi") // Too short
 		if err == nil {
 			t.Error("Expected validation to fail")
 		}
 		if err.Error() != "Field: hi, Error: Custom min length message" {
-			// Note: Exact error format may vary based on implementation
 			t.Logf("Error message: %s", err.Error())
 		}
 	})
@@ -475,7 +442,6 @@ func TestComplexValidationPatterns(t *testing.T) {
 			"terms": validators.Bool().Required().WithRequiredMessage("Must accept terms"),
 		}).Required()
 
-		// Valid user
 		validUser := map[string]interface{}{
 			"username": "john_doe",
 			"email":    "john@example.com",
@@ -490,7 +456,6 @@ func TestComplexValidationPatterns(t *testing.T) {
 		// Invalid user (missing required fields)
 		invalidUser := map[string]interface{}{
 			"username": "john_doe",
-			// missing email, password, terms
 		}
 		if err := userSchema.Validate(invalidUser); err == nil {
 			t.Error("Expected invalid user to fail")

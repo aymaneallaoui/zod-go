@@ -9,13 +9,13 @@ A TypeScript-inspired schema validation library for Go. Zod-Go provides a fluent
 
 ## Features
 
-- **🔗 Fluent API**: Chain validation rules for readable and maintainable code
-- **📊 Rich Data Types**: Support for strings, numbers, booleans, arrays, objects, and maps
-- **🎯 Detailed Errors**: Comprehensive error reporting with custom messages and nested validation details
-- **⚡ High Performance**: Optimized validation with concurrent processing support
-- **🔧 Extensible**: Easy to extend with custom validators and rules
-- **📖 Well Documented**: Comprehensive documentation with examples
-- **🧪 Well Tested**: High test coverage with benchmarks
+- **Fluent API**: Chain validation rules for readable and maintainable code
+- **Rich Data Types**: Support for strings, numbers, booleans, arrays, objects, and maps
+- **Detailed Errors**: Comprehensive error reporting with custom messages and nested validation details
+- **High Performance**: Optimized validation with concurrent processing support
+- **Extensible**: Easy to extend with custom validators and rules
+- **Well Documented**: Comprehensive documentation with examples
+- **Well Tested**: High test coverage with benchmarks
 
 ## Installation
 
@@ -206,18 +206,18 @@ Zod-Go provides detailed error information:
 err := schema.Validate(invalidData)
 if err != nil {
     validationErr := err.(*zod.ValidationError)
-    
+
     // Get JSON representation
     fmt.Println(validationErr.ErrorJSON())
-    
+
     // Access error details
     fmt.Printf("Field: %s\n", validationErr.Field)
     fmt.Printf("Message: %s\n", validationErr.Message)
     fmt.Printf("Value: %v\n", validationErr.Value)
-    
+
     // Handle nested errors
     for _, detail := range validationErr.Details {
-        fmt.Printf("Nested error - Field: %s, Message: %s\n", 
+        fmt.Printf("Nested error - Field: %s, Message: %s\n",
             detail.Field, detail.Message)
     }
 }

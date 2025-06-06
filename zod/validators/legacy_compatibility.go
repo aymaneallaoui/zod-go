@@ -154,10 +154,8 @@ func (s *StringSchema) WithMessage(validationType, message string) *StringSchema
 }
 
 func (s *StringSchema) Validate(data interface{}) error {
-	// Use the new implementation internally for consistency
 	newSchema := String()
 
-	// Copy settings to new schema
 	if s.minLength > 0 {
 		newSchema = newSchema.Min(s.minLength)
 	}
@@ -177,12 +175,10 @@ func (s *StringSchema) Validate(data interface{}) error {
 		newSchema = newSchema.Custom(s.customFunc)
 	}
 
-	// Apply error messages
 	for key, msg := range s.customError {
 		newSchema = newSchema.WithMessage(key, msg)
 	}
 
-	// Apply state
 	if s.required {
 		return newSchema.Required().Validate(data)
 	} else if s.optional {
@@ -193,12 +189,8 @@ func (s *StringSchema) Validate(data interface{}) error {
 		return optSchema.Validate(data)
 	}
 
-	// Default to required if neither is explicitly set
 	return newSchema.Required().Validate(data)
 }
-
-// Similar legacy implementations for other types...
-// (Abbreviated for brevity, but would follow the same pattern)
 
 // Compatibility warning function
 func init() {

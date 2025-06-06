@@ -13,8 +13,7 @@ import (
 func TestEdgeCases(t *testing.T) {
 	t.Run("Empty and Nil Inputs", func(t *testing.T) {
 		stringSchema := String().Required()
-		
-		// Test various nil representations
+
 		nilCases := []interface{}{nil, (*string)(nil), (*int)(nil)}
 		for i, nilCase := range nilCases {
 			t.Run(fmt.Sprintf("nil_case_%d", i), func(t *testing.T) {
@@ -24,12 +23,10 @@ func TestEdgeCases(t *testing.T) {
 			})
 		}
 
-		// Test empty string vs nil
 		if err := stringSchema.Validate(""); err == nil {
 			t.Error("Expected empty string to fail for required field")
 		}
 
-		// Test zero values
 		numberSchema := Number().Required()
 		if err := numberSchema.Validate(0); err != nil {
 			t.Errorf("Expected zero to be valid for number, got: %v", err)
@@ -40,9 +37,8 @@ func TestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Boundary Values", func(t *testing.T) {
-		// Test string length boundaries
 		schema := String().Min(5).Max(10).Required()
-		
+
 		if err := schema.Validate("1234"); err == nil {
 			t.Error("Expected string with length 4 to fail min(5)")
 		}
@@ -56,9 +52,8 @@ func TestEdgeCases(t *testing.T) {
 			t.Error("Expected string with length 11 to fail max(10)")
 		}
 
-		// Test number boundaries
 		numSchema := Number().Min(0).Max(100).Required()
-		
+
 		if err := numSchema.Validate(-0.1); err == nil {
 			t.Error("Expected -0.1 to fail min(0)")
 		}
@@ -93,7 +88,6 @@ func TestEdgeCases(t *testing.T) {
 			})
 		}
 
-		// Test very long unicode string
 		longUnicode := strings.Repeat("🚀", 100)
 		if err := String().Max(50).Required().Validate(longUnicode); err == nil {
 			t.Error("Expected long unicode string to fail max length")
@@ -114,9 +108,7 @@ func TestEdgeCases(t *testing.T) {
 		for i, testCase := range extremeCases {
 			t.Run(fmt.Sprintf("extreme_number_%d", i), func(t *testing.T) {
 				err := schema.Validate(testCase)
-				// NaN and Inf should be handled gracefully
 				if math.IsNaN(testCase) || math.IsInf(testCase, 0) {
-					// These might be valid or invalid depending on implementation
 					t.Logf("Extreme value %v result: %v", testCase, err)
 				} else {
 					if err != nil {
@@ -128,7 +120,6 @@ func TestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large Data Structures", func(t *testing.T) {
-		// Test large arrays
 		largeArray := make([]string, 10000)
 		for i := range largeArray {
 			largeArray[i] = fmt.Sprintf("item_%d", i)
@@ -139,7 +130,6 @@ func TestEdgeCases(t *testing.T) {
 			t.Errorf("Expected large array to be valid, got: %v", err)
 		}
 
-		// Test deeply nested objects
 		deepObject := make(map[string]interface{})
 		current := deepObject
 		for i := 0; i < 100; i++ {
@@ -149,7 +139,6 @@ func TestEdgeCases(t *testing.T) {
 		}
 		current["value"] = "deep_value"
 
-		// Should handle deep nesting gracefully
 		objectSchema := Object(map[string]interface{}{}).Optional()
 		if err := objectSchema.Validate(deepObject); err != nil {
 			t.Errorf("Expected deep object to be valid, got: %v", err)
@@ -167,8 +156,7 @@ func TestConcurrencyAndThreadSafety(t *testing.T) {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				
-				// Create schemas concurrently
+
 				schema := String().
 					Min(1).
 					Max(100).
@@ -189,12 +177,12 @@ func TestConcurrencyAndThreadSafety(t *testing.T) {
 		schema := String().Min(1).Max(100).Required()
 		var wg sync.WaitGroup
 		numGoroutines := 1000
-		
+
 		for i := 0; i < numGoroutines; i++ {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				
+
 				testValue := fmt.Sprintf("concurrent_test_%d", id)
 				if err := schema.Validate(testValue); err != nil {
 					t.Errorf("Goroutine %d: validation failed: %v", id, err)
@@ -220,7 +208,7 @@ func TestConcurrencyAndThreadSafety(t *testing.T) {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				
+
 				testData := map[string]interface{}{
 					"id":    id,
 					"name":  fmt.Sprintf("User_%d", id),
@@ -246,7 +234,6 @@ func TestErrorMessageCustomization(t *testing.T) {
 			Max(10).WithMessage(ErrMaxLength, "Custom max length error").
 			Required().WithRequiredMessage("Custom required error")
 
-		// Test min length error
 		err := schema.Validate("hi")
 		if err == nil {
 			t.Error("Expected validation to fail")
@@ -255,7 +242,6 @@ func TestErrorMessageCustomization(t *testing.T) {
 			t.Errorf("Expected custom min length error message, got: %s", err.Error())
 		}
 
-		// Test max length error
 		err = schema.Validate("this_is_too_long")
 		if err == nil {
 			t.Error("Expected validation to fail")
@@ -264,7 +250,6 @@ func TestErrorMessageCustomization(t *testing.T) {
 			t.Errorf("Expected custom max length error message, got: %s", err.Error())
 		}
 
-		// Test required error
 		err = schema.Validate("")
 		if err == nil {
 			t.Error("Expected validation to fail")
@@ -284,24 +269,21 @@ func TestErrorMessageCustomization(t *testing.T) {
 		if err == nil {
 			t.Error("Expected validation to fail")
 		}
-		
-		// The last set message should win
+
 		if !strings.Contains(err.Error(), "Override message") {
 			t.Errorf("Expected override message, got: %s", err.Error())
 		}
 	})
 
 	t.Run("Default vs Custom Messages", func(t *testing.T) {
-		// Schema with default messages
 		defaultSchema := String().Min(5).Required()
-		
-		// Schema with custom messages
+
 		customSchema := String().
 			Min(5).WithMinLengthMessage("Custom message").
 			Required()
 
 		testValue := "hi"
-		
+
 		defaultErr := defaultSchema.Validate(testValue)
 		customErr := customSchema.Validate(testValue)
 
@@ -309,7 +291,6 @@ func TestErrorMessageCustomization(t *testing.T) {
 			t.Error("Expected both validations to fail")
 		}
 
-		// Should have different error messages
 		if defaultErr.Error() == customErr.Error() {
 			t.Error("Expected different error messages for default vs custom")
 		}
@@ -367,7 +348,6 @@ func TestComplexDataTypes(t *testing.T) {
 			t.Errorf("Expected nested object to be valid, got: %v", err)
 		}
 
-		// Test with missing nested required field
 		invalidData := map[string]interface{}{
 			"user": map[string]interface{}{
 				"profile": map[string]interface{}{
@@ -409,7 +389,7 @@ func TestComplexDataTypes(t *testing.T) {
 			},
 			{
 				"id":    2,
-				"name":  "User 2", 
+				"name":  "User 2",
 				"email": "user2@example.com",
 			},
 		}
@@ -418,7 +398,6 @@ func TestComplexDataTypes(t *testing.T) {
 			t.Errorf("Expected array of objects to be valid, got: %v", err)
 		}
 
-		// Test with invalid object in array
 		invalidData := []map[string]interface{}{
 			{
 				"id":    1,
@@ -438,7 +417,6 @@ func TestComplexDataTypes(t *testing.T) {
 	})
 
 	t.Run("Mixed Type Arrays", func(t *testing.T) {
-		// Arrays with different element types should be handled
 		mixedArray := []interface{}{
 			"string_value",
 			123,
@@ -446,10 +424,8 @@ func TestComplexDataTypes(t *testing.T) {
 			map[string]interface{}{"key": "value"},
 		}
 
-		// Generic array validation
 		arraySchema := Array(String()).Optional()
-		
-		// This should fail because not all elements are strings
+
 		if err := arraySchema.Validate(mixedArray); err == nil {
 			t.Log("Mixed array validation behavior:", err)
 		}
@@ -461,7 +437,6 @@ func TestTypeConversions(t *testing.T) {
 	t.Run("Number Type Variations", func(t *testing.T) {
 		schema := Number().Required()
 
-		// Test different numeric types
 		testCases := []interface{}{
 			int(42),
 			int8(42),
@@ -485,7 +460,6 @@ func TestTypeConversions(t *testing.T) {
 			})
 		}
 
-		// Test invalid types
 		invalidCases := []interface{}{
 			"not_a_number",
 			[]int{1, 2, 3},
@@ -541,7 +515,6 @@ func TestTypeConversions(t *testing.T) {
 	t.Run("Array Type Handling", func(t *testing.T) {
 		schema := Array(String()).Required()
 
-		// Test different slice types
 		testCases := []interface{}{
 			[]string{"a", "b", "c"},
 			[]interface{}{"a", "b", "c"},
@@ -555,7 +528,6 @@ func TestTypeConversions(t *testing.T) {
 			})
 		}
 
-		// Test array-like but different types
 		invalidCases := []interface{}{
 			"not_an_array",
 			123,
@@ -575,12 +547,10 @@ func TestTypeConversions(t *testing.T) {
 // TestSchemaComposition tests combining schemas
 func TestSchemaComposition(t *testing.T) {
 	t.Run("Reusable Schema Components", func(t *testing.T) {
-		// Define reusable schemas
 		nameSchema := String().Min(1).Max(100).Required()
 		emailSchema := Email()
 		ageSchema := Number().Integer().Min(0).Max(150).Optional()
 
-		// Compose them into larger schemas
 		userSchema := Object(map[string]interface{}{
 			"firstName": nameSchema,
 			"lastName":  nameSchema,
@@ -611,14 +581,12 @@ func TestSchemaComposition(t *testing.T) {
 	})
 
 	t.Run("Schema Extension Patterns", func(t *testing.T) {
-		// Base user schema
 		baseUserFields := map[string]interface{}{
 			"id":    Number().Integer().Required(),
 			"name":  String().Min(1).Required(),
 			"email": Email(),
 		}
 
-		// Extended user schema with additional fields
 		extendedUserFields := make(map[string]interface{})
 		for k, v := range baseUserFields {
 			extendedUserFields[k] = v
@@ -663,10 +631,8 @@ func TestSchemaComposition(t *testing.T) {
 // TestMemoryAndPerformance tests memory usage and performance characteristics
 func TestMemoryAndPerformance(t *testing.T) {
 	t.Run("Schema Reuse", func(t *testing.T) {
-		// Create a schema once and reuse it many times
 		schema := String().Min(1).Max(100).Required()
 
-		// Validate many times with the same schema
 		for i := 0; i < 1000; i++ {
 			testValue := fmt.Sprintf("test_value_%d", i)
 			if err := schema.Validate(testValue); err != nil {
@@ -676,7 +642,6 @@ func TestMemoryAndPerformance(t *testing.T) {
 	})
 
 	t.Run("Large Schema Performance", func(t *testing.T) {
-		// Create a large schema with many fields
 		fields := make(map[string]interface{})
 		for i := 0; i < 100; i++ {
 			fields[fmt.Sprintf("field_%d", i)] = String().
@@ -687,9 +652,8 @@ func TestMemoryAndPerformance(t *testing.T) {
 
 		largeSchema := Object(fields).Required()
 
-		// Create test data
 		testData := make(map[string]interface{})
-		for i := 0; i < 50; i++ { // Only populate half the fields
+		for i := 0; i < 50; i++ {
 			testData[fmt.Sprintf("field_%d", i)] = fmt.Sprintf("value_%d_test", i)
 		}
 
@@ -699,7 +663,6 @@ func TestMemoryAndPerformance(t *testing.T) {
 	})
 
 	t.Run("Memory Efficiency", func(t *testing.T) {
-		// Test that creating many schemas doesn't cause memory issues
 		schemas := make([]interface{ Validate(interface{}) error }, 1000)
 
 		for i := 0; i < 1000; i++ {
@@ -709,12 +672,9 @@ func TestMemoryAndPerformance(t *testing.T) {
 				Required()
 		}
 
-		// Validate with each schema
 		for i, schema := range schemas {
-			// Fixed: Create test values that respect the length constraints
 			minLen := i % 10
 			maxLen := (i % 50) + 10
-			// Create a string that fits within the constraints
 			testValue := fmt.Sprintf("test_%d", i)
 			if len(testValue) < minLen {
 				testValue += strings.Repeat("x", minLen-len(testValue))
@@ -722,7 +682,7 @@ func TestMemoryAndPerformance(t *testing.T) {
 			if len(testValue) > maxLen {
 				testValue = testValue[:maxLen]
 			}
-			
+
 			if err := schema.Validate(testValue); err != nil {
 				t.Errorf("Schema %d validation failed: %v", i, err)
 			}
@@ -739,11 +699,10 @@ func TestErrorHandling(t *testing.T) {
 			"age":   Number().Min(18).Integer().Required(),
 		}).Required()
 
-		// Data that fails multiple validations
 		invalidData := map[string]interface{}{
-			"name":  "Jo",               // Too short
-			"email": "invalid-email",    // Invalid format
-			"age":   "not_a_number",     // Wrong type
+			"name":  "Jo",            // Too short
+			"email": "invalid-email", // Invalid format
+			"age":   "not_a_number",  // Wrong type
 		}
 
 		err := schema.Validate(invalidData)
@@ -751,18 +710,15 @@ func TestErrorHandling(t *testing.T) {
 			t.Error("Expected validation to fail with multiple errors")
 		}
 
-		// Error should contain information about multiple failures
 		errorString := err.Error()
 		t.Logf("Multiple validation errors: %s", errorString)
-		
-		// Fixed: Check for error indicators that actually exist in the error message
+
 		if !strings.Contains(errorString, "Error:") {
 			t.Error("Expected error to indicate validation failure")
 		}
 	})
 
 	t.Run("Error Propagation", func(t *testing.T) {
-		// Test that errors propagate correctly through nested structures
 		schema := Array(Object(map[string]interface{}{
 			"users": Array(Object(map[string]interface{}{
 				"name": String().Min(1).Required(),
@@ -786,10 +742,8 @@ func TestErrorHandling(t *testing.T) {
 	})
 
 	t.Run("Panic Recovery", func(t *testing.T) {
-		// Test that the validation doesn't panic with extreme inputs
 		schema := String().Required()
 
-		// These shouldn't panic the validator
 		extremeInputs := []interface{}{
 			nil,
 			(*string)(nil),
@@ -815,13 +769,11 @@ func TestErrorHandling(t *testing.T) {
 // TestCompatibility tests integration with existing Go patterns
 func TestCompatibility(t *testing.T) {
 	t.Run("Interface Compatibility", func(t *testing.T) {
-		// Test that our schemas implement expected interfaces
 		stringSchema := String().Required()
-		
-		// Should implement a validation interface
+
 		var validator interface{ Validate(interface{}) error }
 		validator = stringSchema
-		
+
 		if err := validator.Validate("test"); err != nil {
 			t.Errorf("Interface validation failed: %v", err)
 		}
@@ -885,7 +837,6 @@ func TestCompatibility(t *testing.T) {
 // TestCustomValidators tests custom validation functions
 func TestCustomValidators(t *testing.T) {
 	t.Run("String Custom Validation", func(t *testing.T) {
-		// Custom validation that checks for profanity
 		profanityChecker := func(s string) error {
 			badWords := []string{"spam", "badword"}
 			for _, bad := range badWords {
@@ -901,29 +852,26 @@ func TestCustomValidators(t *testing.T) {
 			Custom(profanityChecker).
 			Required()
 
-		// Valid content
 		if err := schema.Validate("This is good content"); err != nil {
 			t.Error("Expected clean content to pass, got:", err)
 		}
 
-		// Invalid content
 		if err := schema.Validate("This is spam content"); err == nil {
 			t.Error("Expected inappropriate content to fail")
 		}
 	})
 
 	t.Run("Number Custom Validation", func(t *testing.T) {
-		// Custom validation for prime numbers
 		isPrime := func(n float64) error {
 			if n != float64(int(n)) {
 				return fmt.Errorf("must be an integer")
 			}
-			
+
 			num := int(n)
 			if num < 2 {
 				return fmt.Errorf("must be a prime number (>= 2)")
 			}
-			
+
 			for i := 2; i*i <= num; i++ {
 				if num%i == 0 {
 					return fmt.Errorf("must be a prime number")
@@ -936,7 +884,6 @@ func TestCustomValidators(t *testing.T) {
 			Custom(isPrime).
 			Required()
 
-		// Test prime numbers
 		primes := []int{2, 3, 5, 7, 11, 13}
 		for _, prime := range primes {
 			if err := schema.Validate(prime); err != nil {
@@ -944,7 +891,6 @@ func TestCustomValidators(t *testing.T) {
 			}
 		}
 
-		// Test non-prime numbers
 		nonPrimes := []int{4, 6, 8, 9, 10}
 		for _, nonPrime := range nonPrimes {
 			if err := schema.Validate(nonPrime); err == nil {
@@ -954,19 +900,18 @@ func TestCustomValidators(t *testing.T) {
 	})
 
 	t.Run("Object Custom Validation", func(t *testing.T) {
-		// Custom validation for password confirmation
 		passwordMatch := func(data map[string]interface{}) error {
 			password, hasPassword := data["password"].(string)
 			confirm, hasConfirm := data["confirmPassword"].(string)
-			
+
 			if !hasPassword || !hasConfirm {
 				return fmt.Errorf("both password and confirmPassword are required")
 			}
-			
+
 			if password != confirm {
 				return fmt.Errorf("passwords do not match")
 			}
-			
+
 			return nil
 		}
 
@@ -975,22 +920,20 @@ func TestCustomValidators(t *testing.T) {
 			"confirmPassword": String().Required(),
 		}).Custom(passwordMatch).Required()
 
-		// Valid data
 		validData := map[string]interface{}{
 			"password":        "securepass123",
 			"confirmPassword": "securepass123",
 		}
-		
+
 		if err := schema.Validate(validData); err != nil {
 			t.Errorf("Expected matching passwords to pass, got: %v", err)
 		}
 
-		// Invalid data
 		invalidData := map[string]interface{}{
 			"password":        "securepass123",
 			"confirmPassword": "differentpass",
 		}
-		
+
 		if err := schema.Validate(invalidData); err == nil {
 			t.Error("Expected mismatched passwords to fail")
 		}

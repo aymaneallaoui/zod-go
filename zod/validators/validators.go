@@ -1,5 +1,3 @@
-// Package validators provides a clean, type-safe validation API with excellent developer experience.
-// When typing "validators." users will only see the main builder functions and convenience methods.
 package validators
 
 // String creates a new string validation builder.
