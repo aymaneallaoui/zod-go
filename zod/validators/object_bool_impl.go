@@ -75,6 +75,9 @@ func (o *objectSchema) Optional() OptionalObjectBuilder {
 }
 
 func (o *objectSchema) WithMessage(validationType, message string) ObjectBuilder {
+	if o.customError == nil {
+		o.customError = make(map[string]string)
+	}
 	o.customError[validationType] = message
 	return o
 }
@@ -96,6 +99,9 @@ func (r *requiredObjectSchema) Custom(fn func(map[string]interface{}) error) Req
 }
 
 func (r *requiredObjectSchema) WithMessage(validationType, message string) RequiredObjectBuilder {
+	if r.objectSchema.customError == nil {
+		r.objectSchema.customError = make(map[string]string)
+	}
 	r.objectSchema.customError[validationType] = message
 	return r
 }
@@ -130,6 +136,9 @@ func (o *optionalObjectSchema) Default(value map[string]interface{}) OptionalObj
 }
 
 func (o *optionalObjectSchema) WithMessage(validationType, message string) OptionalObjectBuilder {
+	if o.objectSchema.customError == nil {
+		o.objectSchema.customError = make(map[string]string)
+	}
 	o.objectSchema.customError[validationType] = message
 	return o
 }
@@ -192,7 +201,7 @@ func (o *objectSchema) validate(data interface{}) error {
 			if !o.partialMode {
 				// Check if field is required by trying to validate nil
 				if err := o.validateField(fieldSchema, nil); err != nil {
-					details = append(details, *zod.NewValidationError(fieldName, nil, 
+					details = append(details, *zod.NewValidationError(fieldName, nil,
 						fmt.Sprintf("missing required field: %s", fieldName)))
 				}
 			}
@@ -225,18 +234,77 @@ func (o *objectSchema) validate(data interface{}) error {
 }
 
 func (o *objectSchema) validateField(fieldSchema, value interface{}) error {
-	// If fieldSchema has a Validate method, use it
+	// First, try the standard Validate method (for finalized schemas)
 	if validator, ok := fieldSchema.(interface{ Validate(interface{}) error }); ok {
 		return validator.Validate(value)
 	}
-	
-	// Otherwise, assume it's compatible with existing validators
-	return nil
+
+	// Handle unfinalized schemas by type - automatically treat them as required
+	switch schema := fieldSchema.(type) {
+	case *stringSchema:
+		// Create a required string validator from the unfinalized schema
+		requiredSchema := &requiredStringSchema{schema}
+		requiredSchema.stringSchema.required = true
+		requiredSchema.stringSchema.optional = false
+		return requiredSchema.Validate(value)
+		
+	case *numberSchema:
+		// Create a required number validator from the unfinalized schema
+		requiredSchema := &requiredNumberSchema{schema}
+		requiredSchema.numberSchema.required = true
+		requiredSchema.numberSchema.optional = false
+		return requiredSchema.Validate(value)
+		
+	case *objectSchema:
+		// Create a required object validator from the unfinalized schema
+		requiredSchema := &requiredObjectSchema{schema}
+		requiredSchema.objectSchema.required = true
+		requiredSchema.objectSchema.optional = false
+		return requiredSchema.Validate(value)
+		
+	case *boolSchema:
+		// Create a required bool validator from the unfinalized schema  
+		requiredSchema := &requiredBoolSchema{schema}
+		requiredSchema.boolSchema.required = true
+		requiredSchema.boolSchema.optional = false
+		return requiredSchema.Validate(value)
+		
+	case *arraySchema:
+		// Create a required array validator from the unfinalized schema
+		requiredSchema := &requiredArraySchema{schema}
+		requiredSchema.arraySchema.required = true
+		requiredSchema.arraySchema.optional = false
+		return requiredSchema.Validate(value)
+	}
+
+	// Try reflection as a fallback for other types
+	val := reflect.ValueOf(fieldSchema)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	// Look for a Validate method using reflection
+	validateMethod := val.MethodByName("Validate")
+	if validateMethod.IsValid() {
+		// Call the Validate method
+		results := validateMethod.Call([]reflect.Value{reflect.ValueOf(value)})
+		if len(results) > 0 {
+			if err, ok := results[0].Interface().(error); ok {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// If we can't find a way to validate, that's an error in the schema definition
+	return fmt.Errorf("field schema does not implement validation interface: %T", fieldSchema)
 }
 
 func (o *objectSchema) getErrorMessage(validationType, defaultMessage string) string {
-	if msg, exists := o.customError[validationType]; exists {
-		return msg
+	if o.customError != nil {
+		if msg, exists := o.customError[validationType]; exists {
+			return msg
+		}
 	}
 	return defaultMessage
 }
@@ -260,6 +328,9 @@ func (b *boolSchema) Optional() OptionalBoolBuilder {
 }
 
 func (b *boolSchema) WithMessage(validationType, message string) BoolBuilder {
+	if b.customError == nil {
+		b.customError = make(map[string]string)
+	}
 	b.customError[validationType] = message
 	return b
 }
@@ -271,6 +342,9 @@ func (r *requiredBoolSchema) Custom(fn func(bool) error) RequiredBoolBuilder {
 }
 
 func (r *requiredBoolSchema) WithMessage(validationType, message string) RequiredBoolBuilder {
+	if r.boolSchema.customError == nil {
+		r.boolSchema.customError = make(map[string]string)
+	}
 	r.boolSchema.customError[validationType] = message
 	return r
 }
@@ -295,6 +369,9 @@ func (o *optionalBoolSchema) Default(value bool) OptionalBoolBuilder {
 }
 
 func (o *optionalBoolSchema) WithMessage(validationType, message string) OptionalBoolBuilder {
+	if o.boolSchema.customError == nil {
+		o.boolSchema.customError = make(map[string]string)
+	}
 	o.boolSchema.customError[validationType] = message
 	return o
 }
@@ -337,8 +414,10 @@ func (b *boolSchema) validate(data interface{}) error {
 }
 
 func (b *boolSchema) getErrorMessage(validationType, defaultMessage string) string {
-	if msg, exists := b.customError[validationType]; exists {
-		return msg
+	if b.customError != nil {
+		if msg, exists := b.customError[validationType]; exists {
+			return msg
+		}
 	}
 	return defaultMessage
 }
