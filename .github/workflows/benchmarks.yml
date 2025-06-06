@@ -60,7 +60,7 @@ jobs:
 
       - name: Install benchmark tools
         run: |
-          go install golang.org/x/tools/cmd/benchcmp@v0.34.0
+          go install golang.org/x/tools/cmd/benchcmp@v0.13.0
           go install golang.org/x/perf/cmd/benchstat@latest
 
       - name: Setup benchmark environment
