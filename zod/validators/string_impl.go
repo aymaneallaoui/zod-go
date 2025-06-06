@@ -46,7 +46,19 @@ func (s *stringSchema) Max(length int) StringBuilder {
 }
 
 func (s *stringSchema) Pattern(pattern string) StringBuilder {
-	s.pattern = regexp.MustCompile(pattern)
+	// Handle potential regex compilation errors gracefully
+	compiled, err := regexp.Compile(pattern)
+	if err != nil {
+		// Instead of panicking, create a pattern that always fails
+		// This allows the schema to be created but validation will fail with a clear message
+		s.pattern = regexp.MustCompile(`$^`) // This pattern never matches anything
+		if s.customError == nil {
+			s.customError = make(map[string]string)
+		}
+		s.customError[errorKeys.Pattern] = fmt.Sprintf("invalid regex pattern: %v", err)
+	} else {
+		s.pattern = compiled
+	}
 	return s
 }
 
@@ -80,6 +92,9 @@ func (s *stringSchema) Optional() OptionalStringBuilder {
 
 // Error message methods for StringBuilder
 func (s *stringSchema) WithMessage(validationType, message string) StringBuilder {
+	if s.customError == nil {
+		s.customError = make(map[string]string)
+	}
 	s.customError[validationType] = message
 	return s
 }
@@ -118,7 +133,17 @@ func (r *requiredStringSchema) Max(length int) RequiredStringBuilder {
 }
 
 func (r *requiredStringSchema) Pattern(pattern string) RequiredStringBuilder {
-	r.stringSchema.pattern = regexp.MustCompile(pattern)
+	// Handle potential regex compilation errors gracefully
+	compiled, err := regexp.Compile(pattern)
+	if err != nil {
+		r.stringSchema.pattern = regexp.MustCompile(`$^`) // This pattern never matches anything
+		if r.stringSchema.customError == nil {
+			r.stringSchema.customError = make(map[string]string)
+		}
+		r.stringSchema.customError[errorKeys.Pattern] = fmt.Sprintf("invalid regex pattern: %v", err)
+	} else {
+		r.stringSchema.pattern = compiled
+	}
 	return r
 }
 
@@ -139,6 +164,9 @@ func (r *requiredStringSchema) Custom(fn func(string) error) RequiredStringBuild
 
 // Error message methods for RequiredStringBuilder
 func (r *requiredStringSchema) WithMessage(validationType, message string) RequiredStringBuilder {
+	if r.stringSchema.customError == nil {
+		r.stringSchema.customError = make(map[string]string)
+	}
 	r.stringSchema.customError[validationType] = message
 	return r
 }
@@ -181,7 +209,17 @@ func (o *optionalStringSchema) Max(length int) OptionalStringBuilder {
 }
 
 func (o *optionalStringSchema) Pattern(pattern string) OptionalStringBuilder {
-	o.stringSchema.pattern = regexp.MustCompile(pattern)
+	// Handle potential regex compilation errors gracefully
+	compiled, err := regexp.Compile(pattern)
+	if err != nil {
+		o.stringSchema.pattern = regexp.MustCompile(`$^`) // This pattern never matches anything
+		if o.stringSchema.customError == nil {
+			o.stringSchema.customError = make(map[string]string)
+		}
+		o.stringSchema.customError[errorKeys.Pattern] = fmt.Sprintf("invalid regex pattern: %v", err)
+	} else {
+		o.stringSchema.pattern = compiled
+	}
 	return o
 }
 
@@ -208,6 +246,9 @@ func (o *optionalStringSchema) Default(value string) OptionalStringBuilder {
 
 // Error message methods for OptionalStringBuilder
 func (o *optionalStringSchema) WithMessage(validationType, message string) OptionalStringBuilder {
+	if o.stringSchema.customError == nil {
+		o.stringSchema.customError = make(map[string]string)
+	}
 	o.stringSchema.customError[validationType] = message
 	return o
 }
@@ -321,8 +362,10 @@ func (s *stringSchema) validate(data interface{}) error {
 
 // Helper methods (unexported)
 func (s *stringSchema) getErrorMessage(validationType, defaultMessage string) string {
-	if msg, exists := s.customError[validationType]; exists {
-		return msg
+	if s.customError != nil {
+		if msg, exists := s.customError[validationType]; exists {
+			return msg
+		}
 	}
 	return defaultMessage
 }
