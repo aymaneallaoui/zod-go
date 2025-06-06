@@ -2,14 +2,14 @@ name: Benchmarks
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
     paths:
       - "zod/**"
       - "benchmarks/**"
       - "go.mod"
       - "go.sum"
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
     paths:
       - "zod/**"
       - "benchmarks/**"
@@ -118,7 +118,7 @@ jobs:
 
       - name: Save as baseline
         if: |
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.save_baseline == 'true')
         run: |
           cd benchmarks
@@ -126,7 +126,7 @@ jobs:
 
       - name: Upload baseline
         if: |
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.save_baseline == 'true')
         uses: actions/upload-artifact@v3
         with:
