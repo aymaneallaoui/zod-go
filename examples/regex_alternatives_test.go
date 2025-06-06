@@ -243,7 +243,7 @@ func StrongPasswordValidator(password string) error {
 	return nil
 }
 
-// Usage example function (not a test)
+// ExamplePasswordValidation demonstrates password validation usage
 func ExamplePasswordValidation() {
 	// Create a strong password schema
 	passwordSchema := String().
